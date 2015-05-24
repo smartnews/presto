@@ -213,6 +213,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.openx.data</groupId>
+            <artifactId>json-serde</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Presto SPI -->
         <dependency>
             <groupId>io.prestosql</groupId>
