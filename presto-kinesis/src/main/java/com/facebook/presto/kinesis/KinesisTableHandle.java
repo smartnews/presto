@@ -18,10 +18,9 @@ import com.facebook.presto.spi.ConnectorTableHandle;
 import com.facebook.presto.spi.SchemaTableName;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Class maintains all the properties of Presto Table
@@ -60,11 +59,11 @@ public class KinesisTableHandle
             @JsonProperty("streamName") String streamName,
             @JsonProperty("messageDataFormat") String messageDataFormat)
     {
-        this.connectorId = checkNotNull(connectorId, "connectorId is null");
-        this.schemaName = checkNotNull(schemaName, "schemaName is null");
-        this.tableName = checkNotNull(tableName, "tableName is null");
-        this.streamName = checkNotNull(streamName, "topicName is null");
-        this.messageDataFormat = checkNotNull(messageDataFormat, "messageDataFormat is null");
+        this.connectorId = requireNonNull(connectorId, "connectorId is null");
+        this.schemaName = requireNonNull(schemaName, "schemaName is null");
+        this.tableName = requireNonNull(tableName, "tableName is null");
+        this.streamName = requireNonNull(streamName, "topicName is null");
+        this.messageDataFormat = requireNonNull(messageDataFormat, "messageDataFormat is null");
     }
 
     @JsonProperty
@@ -105,7 +104,7 @@ public class KinesisTableHandle
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(connectorId, schemaName, tableName, streamName, messageDataFormat);
+        return java.util.Objects.hash(connectorId, schemaName, tableName, streamName, messageDataFormat);
     }
 
     @Override
@@ -119,11 +118,11 @@ public class KinesisTableHandle
         }
 
         KinesisTableHandle other = (KinesisTableHandle) obj;
-        return Objects.equal(this.connectorId, other.connectorId)
-                && Objects.equal(this.schemaName, other.schemaName)
-                && Objects.equal(this.tableName, other.tableName)
-                && Objects.equal(this.streamName, other.streamName)
-                && Objects.equal(this.messageDataFormat, other.messageDataFormat);
+        return java.util.Objects.equals(this.connectorId, other.connectorId)
+                && java.util.Objects.equals(this.schemaName, other.schemaName)
+                && java.util.Objects.equals(this.tableName, other.tableName)
+                && java.util.Objects.equals(this.streamName, other.streamName)
+                && java.util.Objects.equals(this.messageDataFormat, other.messageDataFormat);
     }
 
     @Override

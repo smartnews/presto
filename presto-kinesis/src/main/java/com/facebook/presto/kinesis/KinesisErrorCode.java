@@ -17,7 +17,7 @@ import com.facebook.presto.spi.ErrorCode;
 import com.facebook.presto.spi.ErrorCodeSupplier;
 
 /**
- *  Kinesis connector specific error codes.
+ * Kinesis connector specific error codes.
  */
 public enum KinesisErrorCode
         implements ErrorCodeSupplier

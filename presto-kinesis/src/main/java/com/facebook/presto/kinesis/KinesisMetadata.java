@@ -13,20 +13,13 @@
  */
 package com.facebook.presto.kinesis;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import io.airlift.log.Logger;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.facebook.presto.kinesis.decoder.dummy.DummyKinesisRowDecoder;
-import com.facebook.presto.spi.ColumnMetadata;
 import com.facebook.presto.spi.ColumnHandle;
+import com.facebook.presto.spi.ColumnMetadata;
+import com.facebook.presto.spi.ConnectorMetadata;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorTableHandle;
 import com.facebook.presto.spi.ConnectorTableMetadata;
-import com.facebook.presto.spi.ReadOnlyConnectorMetadata;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.SchemaTablePrefix;
 import com.facebook.presto.spi.TableNotFoundException;
@@ -38,9 +31,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import io.airlift.log.Logger;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 public class KinesisMetadata
-        extends ReadOnlyConnectorMetadata
+        implements ConnectorMetadata
 {
     private static final Logger log = Logger.get(KinesisMetadata.class);
 
@@ -53,19 +53,19 @@ public class KinesisMetadata
 
     @Inject
     KinesisMetadata(@Named("connectorId") String connectorId,
-            KinesisConnectorConfig kinesisConnectorConfig,
-            KinesisHandleResolver handleResolver,
-            Supplier<Map<SchemaTableName, KinesisStreamDescription>> kinesisTableDescriptionSupplier,
-            Set<KinesisInternalFieldDescription> internalFieldDescriptions)
+                    KinesisConnectorConfig kinesisConnectorConfig,
+                    KinesisHandleResolver handleResolver,
+                    Supplier<Map<SchemaTableName, KinesisStreamDescription>> kinesisTableDescriptionSupplier,
+                    Set<KinesisInternalFieldDescription> internalFieldDescriptions)
     {
-        this.connectorId = checkNotNull(connectorId, "connectorId is null");
-        this.kinesisConnectorConfig = checkNotNull(kinesisConnectorConfig, "kinesisConfig is null");
-        this.handleResolver = checkNotNull(handleResolver, "handleResolver is null");
+        this.connectorId = requireNonNull(connectorId, "connectorId is null");
+        this.kinesisConnectorConfig = requireNonNull(kinesisConnectorConfig, "kinesisConfig is null");
+        this.handleResolver = requireNonNull(handleResolver, "handleResolver is null");
 
         log.debug("Loading kinesis table definitions from %s", kinesisConnectorConfig.getTableDescriptionDir().getAbsolutePath());
 
         this.kinesisTableDescriptionSupplier = Suppliers.memoize(kinesisTableDescriptionSupplier);
-        this.internalFieldDescriptions = checkNotNull(internalFieldDescriptions, "internalFieldDescriptions is null");
+        this.internalFieldDescriptions = requireNonNull(internalFieldDescriptions, "internalFieldDescriptions is null");
     }
 
     @Override
@@ -171,7 +171,7 @@ public class KinesisMetadata
     @Override
     public Map<SchemaTableName, List<ColumnMetadata>> listTableColumns(ConnectorSession session, SchemaTablePrefix prefix)
     {
-        checkNotNull(prefix, "prefix is null");
+        requireNonNull(prefix, "prefix is null");
 
         ImmutableMap.Builder<SchemaTableName, List<ColumnMetadata>> columns = ImmutableMap.builder();
 

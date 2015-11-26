@@ -13,12 +13,6 @@
  */
 package com.facebook.presto.kinesis.decoder.json;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.facebook.presto.kinesis.KinesisColumnHandle;
 import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
@@ -28,6 +22,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkState;
 
 public class JsonKinesisRowDecoder
         implements KinesisRowDecoder

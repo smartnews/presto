@@ -13,19 +13,21 @@
  */
 package com.facebook.presto.kinesis.decoder.util;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import com.facebook.presto.kinesis.KinesisColumnHandle;
+import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
-import com.facebook.presto.kinesis.KinesisColumnHandle;
-import com.facebook.presto.kinesis.KinesisFieldValueProvider;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class DecoderTestUtil
 {
-    private DecoderTestUtil() {}
+    private DecoderTestUtil()
+    {
+    }
 
     private static KinesisFieldValueProvider findValueProvider(Set<KinesisFieldValueProvider> providers, KinesisColumnHandle handle)
     {

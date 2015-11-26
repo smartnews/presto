@@ -13,13 +13,17 @@
  */
 package com.facebook.presto.kinesis.decoder.json;
 
-import static com.facebook.presto.kinesis.decoder.util.DecoderTestUtil.checkValue;
-import static com.facebook.presto.kinesis.decoder.util.DecoderTestUtil.checkIsNull;
-import static com.facebook.presto.kinesis.decoder.KinesisFieldDecoder.DEFAULT_FIELD_DECODER_NAME;
-import static java.lang.String.format;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import com.facebook.presto.kinesis.KinesisColumnHandle;
+import com.facebook.presto.kinesis.KinesisFieldValueProvider;
+import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
+import com.facebook.presto.spi.type.BigintType;
+import com.facebook.presto.spi.type.VarcharType;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import io.airlift.json.ObjectMapperProvider;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.testng.annotations.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -28,17 +32,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
-import org.testng.annotations.Test;
-
-import com.facebook.presto.kinesis.KinesisColumnHandle;
-import com.facebook.presto.kinesis.KinesisFieldValueProvider;
-import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
-import com.facebook.presto.spi.type.BigintType;
-import com.facebook.presto.spi.type.VarcharType;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import static com.facebook.presto.kinesis.decoder.KinesisFieldDecoder.DEFAULT_FIELD_DECODER_NAME;
+import static com.facebook.presto.kinesis.decoder.util.DecoderTestUtil.checkIsNull;
+import static com.facebook.presto.kinesis.decoder.util.DecoderTestUtil.checkValue;
+import static java.lang.String.format;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class TestISO8601JsonKinesisFieldDecoder
 {

@@ -13,15 +13,21 @@
  */
 package com.facebook.presto.kinesis;
 
+import com.amazonaws.services.kinesis.model.PutRecordsRequest;
+import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
+import com.facebook.presto.Session;
+import com.facebook.presto.kinesis.util.EmbeddedKinesisStream;
+import com.facebook.presto.kinesis.util.TestUtils;
+import com.facebook.presto.metadata.QualifiedTableName;
 import com.facebook.presto.metadata.SessionPropertyManager;
+import com.facebook.presto.metadata.TableHandle;
+import com.facebook.presto.spi.SchemaTableName;
+import com.facebook.presto.spi.security.Identity;
+import com.facebook.presto.spi.type.BigintType;
+import com.facebook.presto.testing.MaterializedResult;
+import com.facebook.presto.tests.StandaloneQueryRunner;
+import com.google.common.collect.ImmutableMap;
 import io.airlift.log.Logger;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -29,32 +35,25 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
-import com.amazonaws.services.kinesis.model.PutRecordsRequest;
-import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
-import com.facebook.presto.Session;
-import com.facebook.presto.kinesis.util.EmbeddedKinesisStream;
-import com.facebook.presto.kinesis.util.TestUtils;
-import com.facebook.presto.metadata.QualifiedTableName;
-import com.facebook.presto.metadata.TableHandle;
-import com.facebook.presto.spi.SchemaTableName;
-import com.facebook.presto.spi.type.BigintType;
-import com.facebook.presto.testing.MaterializedResult;
-import com.facebook.presto.tests.StandaloneQueryRunner;
-import com.google.common.collect.ImmutableMap;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
+import static com.facebook.presto.kinesis.util.TestUtils.createEmptyStreamDescription;
 import static com.facebook.presto.spi.type.TimeZoneKey.UTC_KEY;
 import static java.util.Locale.ENGLISH;
-import static org.testng.Assert.assertTrue;
-import static com.facebook.presto.kinesis.util.TestUtils.createEmptyStreamDescription;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 @Test(singleThreaded = true)
 public class TestMinimalFunctionality
 {
     private static final Logger log = Logger.get(TestMinimalFunctionality.class);
 
-        private static final Session SESSION = Session.builder(new SessionPropertyManager())
-            .setUser("user")
+    private static final Session SESSION = Session.builder(new SessionPropertyManager())
+            .setIdentity(new Identity("test", Optional.empty()))
             .setSource("source")
             .setCatalog("kinesis")
             .setSchema("default")
@@ -67,12 +66,12 @@ public class TestMinimalFunctionality
     private StandaloneQueryRunner queryRunner;
 
     @Parameters({
-        "kinesis.awsAccessKey",
-        "kinesis.awsSecretKey"
+            "kinesis.awsAccessKey",
+            "kinesis.awsSecretKey"
     })
     @BeforeClass
     public void start(String accessKey, String secretKey)
-        throws Exception
+            throws Exception
     {
         embeddedKinesisStream = new EmbeddedKinesisStream(accessKey, secretKey);
     }
@@ -85,8 +84,8 @@ public class TestMinimalFunctionality
     }
 
     @Parameters({
-        "kinesis.awsAccessKey",
-        "kinesis.awsSecretKey"
+            "kinesis.awsAccessKey",
+            "kinesis.awsSecretKey"
     })
     @BeforeMethod
     public void spinUp(String accessKey, String secretKey)
@@ -97,7 +96,7 @@ public class TestMinimalFunctionality
         this.queryRunner = new StandaloneQueryRunner(SESSION);
         TestUtils.installKinesisPlugin(embeddedKinesisStream, queryRunner,
                 ImmutableMap.<SchemaTableName, KinesisStreamDescription>builder().
-                put(createEmptyStreamDescription(streamName, new SchemaTableName("default", streamName))).build(),
+                        put(createEmptyStreamDescription(streamName, new SchemaTableName("default", streamName))).build(),
                 accessKey, secretKey);
     }
 

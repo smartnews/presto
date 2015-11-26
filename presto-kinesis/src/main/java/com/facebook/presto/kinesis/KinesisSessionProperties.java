@@ -18,6 +18,7 @@ import com.facebook.presto.spi.session.PropertyMetadata;
 import com.google.common.collect.ImmutableList;
 
 import javax.inject.Inject;
+
 import java.util.List;
 
 import static com.facebook.presto.spi.session.PropertyMetadata.booleanSessionProperty;

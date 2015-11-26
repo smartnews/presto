@@ -13,12 +13,12 @@
  */
 package com.facebook.presto.kinesis;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
 import com.amazonaws.services.kinesis.model.Shard;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorPartition;
-import com.facebook.presto.spi.TupleDomain;
+import com.facebook.presto.spi.predicate.TupleDomain;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 public class KinesisShard
         implements ConnectorPartition

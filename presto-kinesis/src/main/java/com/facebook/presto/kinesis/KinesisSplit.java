@@ -13,11 +13,6 @@
  */
 package com.facebook.presto.kinesis;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.List;
-
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.HostAddress;
@@ -25,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 
+import java.util.List;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
+
 /**
- *
  * Kinesis vertion of ConnectorSplit. KinesisConnector fetch the data from kinesis stream and splits the big chunk to multiple split.
  * By default, one shard data is one KinesisSplit.
- *
  */
 public class KinesisSplit
         implements ConnectorSplit
@@ -50,9 +48,9 @@ public class KinesisSplit
             @JsonProperty("start") String start,
             @JsonProperty("end") String end)
     {
-        this.connectorId = checkNotNull(connectorId, "connector id is null");
-        this.streamName = checkNotNull(streamName, "streamName is null");
-        this.messageDataFormat = checkNotNull(messageDataFormat, "messageDataFormat is null");
+        this.connectorId = requireNonNull(connectorId, "connector id is null");
+        this.streamName = requireNonNull(streamName, "streamName is null");
+        this.messageDataFormat = requireNonNull(messageDataFormat, "messageDataFormat is null");
         this.shardId = shardId;
         this.start = start;
         this.end = end;

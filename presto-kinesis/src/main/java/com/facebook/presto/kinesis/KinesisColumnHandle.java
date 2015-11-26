@@ -18,11 +18,9 @@ import com.facebook.presto.spi.ColumnMetadata;
 import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
-import com.google.common.primitives.Ints;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Kinesis version of ConnectoColumnHandle. Keeps all the data of the columns of table formed from data received
@@ -81,10 +79,10 @@ public class KinesisColumnHandle
             @JsonProperty("hidden") boolean hidden,
             @JsonProperty("internal") boolean internal)
     {
-        this.connectorId = checkNotNull(connectorId, "connectorId is null");
+        this.connectorId = requireNonNull(connectorId, "connectorId is null");
         this.ordinalPosition = ordinalPosition;
-        this.name = checkNotNull(name, "name is null");
-        this.type = checkNotNull(type, "type is null");
+        this.name = requireNonNull(name, "name is null");
+        this.type = requireNonNull(type, "type is null");
         this.mapping = mapping;
         this.dataFormat = dataFormat;
         this.formatHint = formatHint;
@@ -154,7 +152,7 @@ public class KinesisColumnHandle
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(connectorId, ordinalPosition, name, type, mapping, dataFormat, formatHint, hidden, internal);
+        return java.util.Objects.hash(connectorId, ordinalPosition, name, type, mapping, dataFormat, formatHint, hidden, internal);
     }
 
     @Override
@@ -168,21 +166,21 @@ public class KinesisColumnHandle
         }
 
         KinesisColumnHandle other = (KinesisColumnHandle) obj;
-        return Objects.equal(this.connectorId, other.connectorId) &&
-                Objects.equal(this.ordinalPosition, other.ordinalPosition) &&
-                Objects.equal(this.name, other.name) &&
-                Objects.equal(this.type, other.type) &&
-                Objects.equal(this.mapping, other.mapping) &&
-                Objects.equal(this.dataFormat, other.dataFormat) &&
-                Objects.equal(this.formatHint, other.formatHint) &&
-                Objects.equal(this.hidden, other.hidden) &&
-                Objects.equal(this.internal, other.internal);
+        return java.util.Objects.equals(this.connectorId, other.connectorId) &&
+                java.util.Objects.equals(this.ordinalPosition, other.ordinalPosition) &&
+                java.util.Objects.equals(this.name, other.name) &&
+                java.util.Objects.equals(this.type, other.type) &&
+                java.util.Objects.equals(this.mapping, other.mapping) &&
+                java.util.Objects.equals(this.dataFormat, other.dataFormat) &&
+                java.util.Objects.equals(this.formatHint, other.formatHint) &&
+                java.util.Objects.equals(this.hidden, other.hidden) &&
+                java.util.Objects.equals(this.internal, other.internal);
     }
 
     @Override
     public int compareTo(KinesisColumnHandle otherHandle)
     {
-        return Ints.compare(this.getOrdinalPosition(), otherHandle.getOrdinalPosition());
+        return Integer.compare(this.getOrdinalPosition(), otherHandle.getOrdinalPosition());
     }
 
     @Override

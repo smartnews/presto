@@ -13,16 +13,15 @@
  */
 package com.facebook.presto.kinesis;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 import com.facebook.presto.spi.ColumnMetadata;
 import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Objects.requireNonNull;
 
 public class KinesisStreamFieldDescription
 {
@@ -46,7 +45,7 @@ public class KinesisStreamFieldDescription
     {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
-        this.type = checkNotNull(type, "type is null");
+        this.type = requireNonNull(type, "type is null");
         this.mapping = mapping;
         this.comment = comment;
         this.dataFormat = dataFormat;
@@ -117,7 +116,7 @@ public class KinesisStreamFieldDescription
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(name, type, mapping, dataFormat, formatHint, hidden);
+        return java.util.Objects.hash(name, type, mapping, dataFormat, formatHint, hidden);
     }
 
     @Override
@@ -131,12 +130,12 @@ public class KinesisStreamFieldDescription
         }
 
         KinesisStreamFieldDescription other = (KinesisStreamFieldDescription) obj;
-        return Objects.equal(this.name, other.name) &&
-                Objects.equal(this.type, other.type) &&
-                Objects.equal(this.mapping, other.mapping) &&
-                Objects.equal(this.dataFormat, other.dataFormat) &&
-                Objects.equal(this.formatHint, other.formatHint) &&
-                Objects.equal(this.hidden, other.hidden);
+        return java.util.Objects.equals(this.name, other.name) &&
+                java.util.Objects.equals(this.type, other.type) &&
+                java.util.Objects.equals(this.mapping, other.mapping) &&
+                java.util.Objects.equals(this.dataFormat, other.dataFormat) &&
+                java.util.Objects.equals(this.formatHint, other.formatHint) &&
+                java.util.Objects.equals(this.hidden, other.hidden);
     }
 
     @Override

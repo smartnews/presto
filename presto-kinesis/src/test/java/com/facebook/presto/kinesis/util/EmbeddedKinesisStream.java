@@ -13,18 +13,18 @@
  */
 package com.facebook.presto.kinesis.util;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.ArrayList;
-
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
 import com.amazonaws.services.kinesis.model.CreateStreamRequest;
 import com.amazonaws.services.kinesis.model.DeleteStreamRequest;
 import com.amazonaws.services.kinesis.model.DescribeStreamRequest;
 import com.amazonaws.services.kinesis.model.StreamDescription;
 import com.facebook.presto.kinesis.KinesisAwsCredentials;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class EmbeddedKinesisStream
         implements Closeable

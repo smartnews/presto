@@ -13,19 +13,19 @@
  */
 package com.facebook.presto.kinesis.decoder.json;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static io.airlift.slice.Slices.EMPTY_SLICE;
-import static io.airlift.slice.Slices.utf8Slice;
-import static java.lang.String.format;
-import io.airlift.slice.Slice;
-
-import java.util.Set;
-
 import com.facebook.presto.kinesis.KinesisColumnHandle;
 import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableSet;
+import io.airlift.slice.Slice;
+
+import java.util.Set;
+
+import static io.airlift.slice.Slices.EMPTY_SLICE;
+import static io.airlift.slice.Slices.utf8Slice;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 public class JsonKinesisFieldDecoder
         implements KinesisFieldDecoder<JsonNode>
@@ -51,8 +51,8 @@ public class JsonKinesisFieldDecoder
     @Override
     public KinesisFieldValueProvider decode(JsonNode value, KinesisColumnHandle columnHandle)
     {
-        checkNotNull(columnHandle, "columnHandle is null");
-        checkNotNull(value, "value is null");
+        requireNonNull(columnHandle, "columnHandle is null");
+        requireNonNull(value, "value is null");
 
         return new JsonKinesisValueProvider(value, columnHandle);
     }

@@ -13,11 +13,6 @@
  */
 package com.facebook.presto.kinesis;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import javax.inject.Inject;
-
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorHandleResolver;
 import com.facebook.presto.spi.ConnectorIndexHandle;
@@ -27,6 +22,11 @@ import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.ConnectorTableHandle;
 import com.google.inject.name.Named;
 
+import javax.inject.Inject;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
+
 public class KinesisHandleResolver
         implements ConnectorHandleResolver
 {
@@ -34,10 +34,10 @@ public class KinesisHandleResolver
 
     @Inject
     KinesisHandleResolver(@Named("connectorId") String connectorId,
-            KinesisConnectorConfig kinesisConnectorConfig)
+                          KinesisConnectorConfig kinesisConnectorConfig)
     {
-        this.connectorId = checkNotNull(connectorId, "connectorId is null");
-        checkNotNull(kinesisConnectorConfig, "kinesisConfig is null");
+        this.connectorId = requireNonNull(connectorId, "connectorId is null");
+        requireNonNull(kinesisConnectorConfig, "kinesisConfig is null");
     }
 
     @Override
@@ -114,7 +114,7 @@ public class KinesisHandleResolver
 
     KinesisTableHandle convertTableHandle(ConnectorTableHandle tableHandle)
     {
-        checkNotNull(tableHandle, "tableHandle is null");
+        requireNonNull(tableHandle, "tableHandle is null");
         checkArgument(tableHandle instanceof KinesisTableHandle, "tableHandle is not an instance of KinesisTableHandle");
         KinesisTableHandle kinesisTableHandle = (KinesisTableHandle) tableHandle;
         checkArgument(kinesisTableHandle.getConnectorId().equals(connectorId), "tableHandle is not for this connector");
@@ -124,7 +124,7 @@ public class KinesisHandleResolver
 
     KinesisColumnHandle convertColumnHandle(ColumnHandle columnHandle)
     {
-        checkNotNull(columnHandle, "columnHandle is null");
+        requireNonNull(columnHandle, "columnHandle is null");
         checkArgument(columnHandle instanceof KinesisColumnHandle, "columnHandle is not an instance of KinesisColumnHandle");
         KinesisColumnHandle kinesisColumnHandle = (KinesisColumnHandle) columnHandle;
         checkArgument(kinesisColumnHandle.getConnectorId().equals(connectorId), "columnHandle is not for this connector");
@@ -133,7 +133,7 @@ public class KinesisHandleResolver
 
     KinesisSplit convertSplit(ConnectorSplit split)
     {
-        checkNotNull(split, "split is null");
+        requireNonNull(split, "split is null");
         checkArgument(split instanceof KinesisSplit, "split is not an instance of KinesisSplit");
         KinesisSplit kinesisSplit = (KinesisSplit) split;
         checkArgument(kinesisSplit.getConnectorId().equals(connectorId), "split is not for this connector");

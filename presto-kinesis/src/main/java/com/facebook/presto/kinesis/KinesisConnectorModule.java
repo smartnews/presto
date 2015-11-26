@@ -13,15 +13,6 @@
  */
 package com.facebook.presto.kinesis;
 
-import static com.facebook.presto.spi.type.TypeSignature.parseTypeSignature;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static io.airlift.configuration.ConfigurationModule.bindConfig;
-import static io.airlift.json.JsonBinder.jsonBinder;
-import static io.airlift.json.JsonCodecBinder.jsonCodecBinder;
-
-import javax.inject.Inject;
-
 import com.facebook.presto.kinesis.decoder.KinesisDecoderModule;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.TypeManager;
@@ -31,6 +22,15 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+
+import javax.inject.Inject;
+
+import static com.facebook.presto.spi.type.TypeSignature.parseTypeSignature;
+import static com.google.common.base.Preconditions.checkArgument;
+import static io.airlift.configuration.ConfigurationModule.bindConfig;
+import static io.airlift.json.JsonBinder.jsonBinder;
+import static io.airlift.json.JsonCodecBinder.jsonCodecBinder;
+import static java.util.Objects.requireNonNull;
 
 public class KinesisConnectorModule
         implements Module
@@ -67,7 +67,7 @@ public class KinesisConnectorModule
     }
 
     public static final class TypeDeserializer
-        extends FromStringDeserializer<Type>
+            extends FromStringDeserializer<Type>
     {
         private static final long serialVersionUID = 1L;
 
@@ -77,7 +77,7 @@ public class KinesisConnectorModule
         public TypeDeserializer(TypeManager typeManager)
         {
             super(Type.class);
-            this.typeManager = checkNotNull(typeManager, "typeManager is null");
+            this.typeManager = requireNonNull(typeManager, "typeManager is null");
         }
 
         @Override

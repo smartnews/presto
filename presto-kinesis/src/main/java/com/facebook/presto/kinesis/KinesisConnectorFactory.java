@@ -17,7 +17,6 @@ import com.facebook.presto.spi.Connector;
 import com.facebook.presto.spi.ConnectorFactory;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.type.TypeManager;
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Binder;
@@ -31,8 +30,9 @@ import io.airlift.json.JsonModule;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * This factory class creates the KinesisConnector during server start and binds all the dependency
@@ -49,9 +49,9 @@ public class KinesisConnectorFactory
                             Optional<Supplier<Map<SchemaTableName, KinesisStreamDescription>>> tableDescriptionSupplier,
                             Map<String, String> optionalConfig)
     {
-        this.typeManager = checkNotNull(typeManager, "typeManager is null");
-        this.optionalConfig = checkNotNull(optionalConfig, "optionalConfig is null");
-        this.tableDescriptionSupplier = checkNotNull(tableDescriptionSupplier, "tableDescriptionSupplier is null");
+        this.typeManager = requireNonNull(typeManager, "typeManager is null");
+        this.optionalConfig = requireNonNull(optionalConfig, "optionalConfig is null");
+        this.tableDescriptionSupplier = requireNonNull(tableDescriptionSupplier, "tableDescriptionSupplier is null");
     }
 
     @Override
@@ -63,8 +63,8 @@ public class KinesisConnectorFactory
     @Override
     public Connector create(String connectorId, Map<String, String> config)
     {
-        checkNotNull(connectorId, "connectorId is null");
-        checkNotNull(config, "config is null");
+        requireNonNull(connectorId, "connectorId is null");
+        requireNonNull(config, "config is null");
 
         try {
             Bootstrap app = new Bootstrap(

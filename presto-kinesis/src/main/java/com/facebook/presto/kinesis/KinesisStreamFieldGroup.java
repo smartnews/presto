@@ -13,14 +13,14 @@
  */
 package com.facebook.presto.kinesis;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
 public class KinesisStreamFieldGroup
 {
@@ -32,8 +32,8 @@ public class KinesisStreamFieldGroup
             @JsonProperty("dataFormat") String dataFormat,
             @JsonProperty("fields") List<KinesisStreamFieldDescription> fields)
     {
-        this.dataFormat = checkNotNull(dataFormat, "dataFormat is null");
-        this.fields = ImmutableList.copyOf(checkNotNull(fields, "fields is null"));
+        this.dataFormat = requireNonNull(dataFormat, "dataFormat is null");
+        this.fields = ImmutableList.copyOf(requireNonNull(fields, "fields is null"));
     }
 
     @JsonProperty

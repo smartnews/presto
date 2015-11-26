@@ -24,9 +24,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
 /**
- *
  * Kinesis Decoder implementation of Injection Module interface. Binds all the Row and column decoder modules.
- *
  */
 public class KinesisDecoderModule
         implements Module
@@ -50,7 +48,9 @@ public class KinesisDecoderModule
 
     public static void bindFieldDecoder(Binder binder, Class<? extends KinesisFieldDecoder<?>> decoderClass)
     {
-        Multibinder<KinesisFieldDecoder<?>> fieldDecoderBinder = Multibinder.newSetBinder(binder, new TypeLiteral<KinesisFieldDecoder<?>>() {});
+        Multibinder<KinesisFieldDecoder<?>> fieldDecoderBinder = Multibinder.newSetBinder(binder, new TypeLiteral<KinesisFieldDecoder<?>>()
+        {
+        });
         fieldDecoderBinder.addBinding().to(decoderClass).in(Scopes.SINGLETON);
     }
 }

@@ -13,18 +13,18 @@
  */
 package com.facebook.presto.kinesis.decoder.csv;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static io.airlift.slice.Slices.EMPTY_SLICE;
-import static io.airlift.slice.Slices.utf8Slice;
-import static java.lang.String.format;
-import io.airlift.slice.Slice;
-
-import java.util.Set;
-
 import com.facebook.presto.kinesis.KinesisColumnHandle;
 import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
 import com.google.common.collect.ImmutableSet;
+import io.airlift.slice.Slice;
+
+import java.util.Set;
+
+import static io.airlift.slice.Slices.EMPTY_SLICE;
+import static io.airlift.slice.Slices.utf8Slice;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 public class CsvKinesisFieldDecoder
         implements KinesisFieldDecoder<String>
@@ -50,7 +50,7 @@ public class CsvKinesisFieldDecoder
     @Override
     public KinesisFieldValueProvider decode(final String value, final KinesisColumnHandle columnHandle)
     {
-        checkNotNull(columnHandle, "columnHandle is null");
+        requireNonNull(columnHandle, "columnHandle is null");
 
         return new KinesisFieldValueProvider()
         {

@@ -26,7 +26,7 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 public class KinesisConnector
         implements Connector
@@ -45,11 +45,11 @@ public class KinesisConnector
             KinesisRecordSetProvider recordSetProvider,
             KinesisSessionProperties kinesisSessionProperties)
     {
-        this.handleResolver = checkNotNull(handleResolver, "handleResolver is null");
-        this.metadata = checkNotNull(metadata, "metadata is null");
-        this.splitManager = checkNotNull(splitManager, "splitManager is null");
-        this.recordSetProvider = checkNotNull(recordSetProvider, "recordSetProvider is null");
-        this.kinesisSessionProperties = checkNotNull(kinesisSessionProperties, "kinesisSessionProperties is null");
+        this.handleResolver = requireNonNull(handleResolver, "handleResolver is null");
+        this.metadata = requireNonNull(metadata, "metadata is null");
+        this.splitManager = requireNonNull(splitManager, "splitManager is null");
+        this.recordSetProvider = requireNonNull(recordSetProvider, "recordSetProvider is null");
+        this.kinesisSessionProperties = requireNonNull(kinesisSessionProperties, "kinesisSessionProperties is null");
     }
 
     @Override

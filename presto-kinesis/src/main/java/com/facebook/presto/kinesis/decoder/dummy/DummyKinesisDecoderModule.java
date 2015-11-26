@@ -16,8 +16,8 @@ package com.facebook.presto.kinesis.decoder.dummy;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
-import static com.facebook.presto.kinesis.decoder.KinesisDecoderModule.bindRowDecoder;
 import static com.facebook.presto.kinesis.decoder.KinesisDecoderModule.bindFieldDecoder;
+import static com.facebook.presto.kinesis.decoder.KinesisDecoderModule.bindRowDecoder;
 
 public class DummyKinesisDecoderModule
         implements Module

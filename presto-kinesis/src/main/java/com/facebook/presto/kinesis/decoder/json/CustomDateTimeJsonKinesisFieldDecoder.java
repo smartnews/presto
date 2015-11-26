@@ -13,22 +13,20 @@
  */
 package com.facebook.presto.kinesis.decoder.json;
 
-import java.util.Locale;
-import java.util.Set;
-
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-
-import io.airlift.slice.Slice;
-
 import com.facebook.presto.kinesis.KinesisColumnHandle;
 import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 import com.facebook.presto.spi.PrestoException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableSet;
+import io.airlift.slice.Slice;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Locale;
+import java.util.Set;
+
 import static com.facebook.presto.kinesis.KinesisErrorCode.KINESIS_CONVERSION_NOT_SUPPORTED;
+import static java.util.Objects.requireNonNull;
 
 public class CustomDateTimeJsonKinesisFieldDecoder
         extends JsonKinesisFieldDecoder
@@ -48,8 +46,8 @@ public class CustomDateTimeJsonKinesisFieldDecoder
     @Override
     public KinesisFieldValueProvider decode(JsonNode value, KinesisColumnHandle columnHandle)
     {
-        checkNotNull(columnHandle, "columnHandle is null");
-        checkNotNull(value, "value is null");
+        requireNonNull(columnHandle, "columnHandle is null");
+        requireNonNull(value, "value is null");
 
         return new CustomeDateTimeJsonKinesisValueProvider(value, columnHandle);
     }
@@ -85,7 +83,7 @@ public class CustomDateTimeJsonKinesisFieldDecoder
                 return value.asLong();
             }
 
-            checkNotNull(columnHandle.getFormatHint(), "formatHint is null");
+            requireNonNull(columnHandle.getFormatHint(), "formatHint is null");
             String textValue = value.isValueNode() ? value.asText() : value.toString();
 
             DateTimeFormatter formatter = DateTimeFormat.forPattern(columnHandle.getFormatHint()).withLocale(Locale.ENGLISH).withZoneUTC();

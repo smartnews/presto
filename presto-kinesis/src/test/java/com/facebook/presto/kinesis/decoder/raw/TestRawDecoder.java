@@ -13,19 +13,6 @@
  */
 package com.facebook.presto.kinesis.decoder.raw;
 
-import static com.facebook.presto.kinesis.decoder.util.DecoderTestUtil.checkValue;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.testng.annotations.Test;
-
 import com.facebook.presto.kinesis.KinesisColumnHandle;
 import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
@@ -34,6 +21,18 @@ import com.facebook.presto.spi.type.BooleanType;
 import com.facebook.presto.spi.type.VarcharType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.testng.annotations.Test;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static com.facebook.presto.kinesis.decoder.util.DecoderTestUtil.checkValue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class TestRawDecoder
 {

@@ -15,7 +15,7 @@ package com.facebook.presto.smartnews.functions;
 
 import com.facebook.presto.metadata.FunctionFactory;
 import com.facebook.presto.metadata.FunctionListBuilder;
-import com.facebook.presto.metadata.ParametricFunction;
+import com.facebook.presto.metadata.SqlFunction;
 import com.facebook.presto.smartnews.functions.aggregation.HyperLogLogMergeAggregation;
 import com.facebook.presto.spi.type.TypeManager;
 
@@ -32,7 +32,7 @@ public class SmartnewsFunctionFactory
     }
 
     @Override
-    public List<ParametricFunction> listFunctions()
+    public List<SqlFunction> listFunctions()
     {
         return new FunctionListBuilder(typeManager)
                 .aggregate(HyperLogLogMergeAggregation.class)

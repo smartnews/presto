@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 public class KinesisRecordSet
         implements RecordSet
@@ -87,19 +87,19 @@ public class KinesisRecordSet
                      int checkpointIterationNumber,
                      String checkpointLogicalName)
     {
-        this.split = checkNotNull(split, "split is null");
-        this.kinesisConnectorConfig = checkNotNull(kinesisConnectorConfig, "KinesisConnectorConfig is null");
+        this.split = requireNonNull(split, "split is null");
+        this.kinesisConnectorConfig = requireNonNull(kinesisConnectorConfig, "KinesisConnectorConfig is null");
 
         this.globalInternalFieldValueProviders = ImmutableSet.of(
                 KinesisInternalFieldDescription.SHARD_ID_FIELD.forByteValue(split.getShardId().getBytes()),
                 KinesisInternalFieldDescription.SEGMENT_START_FIELD.forByteValue(split.getStart().getBytes()));
 
-        this.clientManager = checkNotNull(clientManager, "clientManager is null");
+        this.clientManager = requireNonNull(clientManager, "clientManager is null");
 
-        this.messageDecoder = checkNotNull(messageDecoder, "rowDecoder is null");
-        this.messageFieldDecoders = checkNotNull(messageFieldDecoders, "messageFieldDecoders is null");
+        this.messageDecoder = requireNonNull(messageDecoder, "rowDecoder is null");
+        this.messageFieldDecoders = requireNonNull(messageFieldDecoders, "messageFieldDecoders is null");
 
-        this.columnHandles = checkNotNull(columnHandles, "columnHandles is null");
+        this.columnHandles = requireNonNull(columnHandles, "columnHandles is null");
 
         ImmutableList.Builder<Type> typeBuilder = ImmutableList.builder();
 

@@ -13,23 +13,24 @@
  */
 package com.facebook.presto.kinesis.util;
 
+import com.facebook.presto.kinesis.KinesisPlugin;
+import com.facebook.presto.kinesis.KinesisStreamDescription;
+import com.facebook.presto.spi.SchemaTableName;
+import com.facebook.presto.testing.QueryRunner;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.facebook.presto.kinesis.KinesisPlugin;
-import com.facebook.presto.kinesis.KinesisStreamDescription;
-import com.facebook.presto.spi.SchemaTableName;
-import com.facebook.presto.testing.QueryRunner;
-import com.google.common.base.Joiner;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableMap;
-
 public class TestUtils
 {
-    private TestUtils() {}
+    private TestUtils()
+    {
+    }
 
     public static int findUnusedPort()
             throws IOException
@@ -51,14 +52,14 @@ public class TestUtils
     public static void installKinesisPlugin(EmbeddedKinesisStream embeddedKinesisStream, QueryRunner queryRunner, Map<SchemaTableName, KinesisStreamDescription> streamDescriptions, String accessKey, String secretKey)
     {
         KinesisPlugin kinesisPlugin = new KinesisPlugin();
-        kinesisPlugin.setTableDescriptionSupplier(Suppliers.ofInstance(streamDescriptions));
+        kinesisPlugin.setTableDescriptionSupplier(() -> streamDescriptions);
         queryRunner.installPlugin(kinesisPlugin);
 
         Map<String, String> kinesisConfig = ImmutableMap.of(
-                    "kinesis.table-names", Joiner.on(",").join(streamDescriptions.keySet()),
-                    "kinesis.default-schema", "default",
-                    "kinesis.access-key", accessKey,
-                    "kinesis.secret-key", secretKey);
+                "kinesis.table-names", Joiner.on(",").join(streamDescriptions.keySet()),
+                "kinesis.default-schema", "default",
+                "kinesis.access-key", accessKey,
+                "kinesis.secret-key", secretKey);
         queryRunner.createCatalog("kinesis", "kinesis", kinesisConfig);
     }
 

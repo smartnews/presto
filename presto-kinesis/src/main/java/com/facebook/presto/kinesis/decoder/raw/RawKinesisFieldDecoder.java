@@ -13,6 +13,13 @@
  */
 package com.facebook.presto.kinesis.decoder.raw;
 
+import com.facebook.presto.kinesis.KinesisColumnHandle;
+import com.facebook.presto.kinesis.KinesisFieldValueProvider;
+import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
+import com.facebook.presto.spi.PrestoException;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 
@@ -21,18 +28,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import com.facebook.presto.kinesis.KinesisColumnHandle;
-import com.facebook.presto.kinesis.KinesisFieldValueProvider;
-import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
-import com.facebook.presto.spi.PrestoException;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.facebook.presto.kinesis.KinesisErrorCode.KINESIS_CONVERSION_NOT_SUPPORTED;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
-import static com.facebook.presto.kinesis.KinesisErrorCode.KINESIS_CONVERSION_NOT_SUPPORTED;
+import static java.util.Objects.requireNonNull;
 
 public class RawKinesisFieldDecoder
         implements KinesisFieldDecoder<byte[]>
@@ -93,8 +92,8 @@ public class RawKinesisFieldDecoder
     @Override
     public KinesisFieldValueProvider decode(byte[] value, KinesisColumnHandle columnHandle)
     {
-        checkNotNull(columnHandle, "columnHandle is null");
-        checkNotNull(value, "value is null");
+        requireNonNull(columnHandle, "columnHandle is null");
+        requireNonNull(value, "value is null");
 
         String mapping = columnHandle.getMapping();
         FieldType fieldType = columnHandle.getDataFormat() == null ? FieldType.BYTE : FieldType.forString(columnHandle.getDataFormat());
@@ -135,8 +134,8 @@ public class RawKinesisFieldDecoder
 
         public RawKinesisValueProvider(ByteBuffer value, KinesisColumnHandle columnHandle, FieldType fieldType)
         {
-            this.columnHandle = checkNotNull(columnHandle, "columnHandle is null");
-            this.fieldType = checkNotNull(fieldType, "fieldType is null");
+            this.columnHandle = requireNonNull(columnHandle, "columnHandle is null");
+            this.fieldType = requireNonNull(fieldType, "fieldType is null");
             this.size = value.limit() - value.position();
             checkState(size >= fieldType.getSize(), "minimum byte size is %s, found %s,", fieldType.getSize(), size);
             this.value = value;

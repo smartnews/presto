@@ -13,14 +13,14 @@
  */
 package com.facebook.presto.kinesis.decoder.dummy;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.facebook.presto.kinesis.KinesisColumnHandle;
 import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
 import com.facebook.presto.kinesis.decoder.KinesisRowDecoder;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class DummyKinesisRowDecoder
         implements KinesisRowDecoder
@@ -35,9 +35,9 @@ public class DummyKinesisRowDecoder
 
     @Override
     public boolean decodeRow(byte[] data,
-            Set<KinesisFieldValueProvider> fieldValueProviders,
-            List<KinesisColumnHandle> columnHandles,
-            Map<KinesisColumnHandle, KinesisFieldDecoder<?>> fieldDecoders)
+                             Set<KinesisFieldValueProvider> fieldValueProviders,
+                             List<KinesisColumnHandle> columnHandles,
+                             Map<KinesisColumnHandle, KinesisFieldDecoder<?>> fieldDecoders)
     {
         return true;
     }

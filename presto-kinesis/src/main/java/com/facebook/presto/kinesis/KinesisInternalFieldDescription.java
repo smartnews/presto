@@ -18,7 +18,6 @@ import com.facebook.presto.spi.type.BigintType;
 import com.facebook.presto.spi.type.BooleanType;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.VarcharType;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
@@ -27,8 +26,8 @@ import java.util.Set;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Objects.requireNonNull;
 
 public class KinesisInternalFieldDescription
 {
@@ -75,8 +74,8 @@ public class KinesisInternalFieldDescription
     {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
-        this.type = checkNotNull(type, "type is null");
-        this.comment = checkNotNull(comment, "comment is null");
+        this.type = requireNonNull(type, "type is null");
+        this.comment = requireNonNull(comment, "comment is null");
     }
 
     public String getName()
@@ -125,7 +124,7 @@ public class KinesisInternalFieldDescription
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(name, type);
+        return java.util.Objects.hash(name, type);
     }
 
     @Override
@@ -139,8 +138,8 @@ public class KinesisInternalFieldDescription
         }
 
         KinesisInternalFieldDescription other = (KinesisInternalFieldDescription) obj;
-        return Objects.equal(this.name, other.name) &&
-                Objects.equal(this.type, other.type);
+        return java.util.Objects.equals(this.name, other.name) &&
+                java.util.Objects.equals(this.type, other.type);
     }
 
     @Override

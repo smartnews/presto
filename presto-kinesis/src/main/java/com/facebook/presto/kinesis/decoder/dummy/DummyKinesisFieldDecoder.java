@@ -13,19 +13,18 @@
  */
 package com.facebook.presto.kinesis.decoder.dummy;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
-import io.airlift.slice.Slice;
-
-import java.util.Set;
-
 import com.facebook.presto.kinesis.KinesisColumnHandle;
 import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
 import com.facebook.presto.spi.PrestoException;
 import com.google.common.collect.ImmutableSet;
+import io.airlift.slice.Slice;
+
+import java.util.Set;
 
 import static com.facebook.presto.kinesis.KinesisErrorCode.KINESIS_CONVERSION_NOT_SUPPORTED;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 public class DummyKinesisFieldDecoder
         implements KinesisFieldDecoder<Void>
@@ -57,7 +56,7 @@ public class DummyKinesisFieldDecoder
     @Override
     public KinesisFieldValueProvider decode(Void value, KinesisColumnHandle columnHandle)
     {
-        checkNotNull(columnHandle, "columnHandle is null");
+        requireNonNull(columnHandle, "columnHandle is null");
 
         return new KinesisFieldValueProvider()
         {

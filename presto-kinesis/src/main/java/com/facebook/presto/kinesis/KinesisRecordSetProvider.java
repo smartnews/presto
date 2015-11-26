@@ -31,7 +31,7 @@ import static com.facebook.presto.kinesis.KinesisSessionProperties.getCheckpoint
 import static com.facebook.presto.kinesis.KinesisSessionProperties.getCheckpointLogicalName;
 import static com.facebook.presto.kinesis.KinesisSessionProperties.getIteratorType;
 import static com.facebook.presto.kinesis.KinesisSessionProperties.isCheckpointEnabled;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 public class KinesisRecordSetProvider
         implements ConnectorRecordSetProvider
@@ -47,10 +47,10 @@ public class KinesisRecordSetProvider
                                     KinesisClientManager clientManager,
                                     KinesisConnectorConfig kinesisConnectorConfig)
     {
-        this.registry = checkNotNull(registry, "registry is null");
-        this.handleResolver = checkNotNull(handleResolver, "handleResolver is null");
-        this.clientManager = checkNotNull(clientManager, "clientManager is null");
-        this.kinesisConnectorConfig = checkNotNull(kinesisConnectorConfig, "kinesisConnectorConfig is null");
+        this.registry = requireNonNull(registry, "registry is null");
+        this.handleResolver = requireNonNull(handleResolver, "handleResolver is null");
+        this.clientManager = requireNonNull(clientManager, "clientManager is null");
+        this.kinesisConnectorConfig = requireNonNull(kinesisConnectorConfig, "kinesisConnectorConfig is null");
     }
 
     @Override

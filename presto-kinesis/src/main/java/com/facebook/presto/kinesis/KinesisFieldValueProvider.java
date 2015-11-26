@@ -13,9 +13,8 @@
  */
 package com.facebook.presto.kinesis;
 
-import io.airlift.slice.Slice;
-
 import com.facebook.presto.spi.PrestoException;
+import io.airlift.slice.Slice;
 
 import static com.facebook.presto.kinesis.KinesisErrorCode.KINESIS_CONVERSION_NOT_SUPPORTED;
 

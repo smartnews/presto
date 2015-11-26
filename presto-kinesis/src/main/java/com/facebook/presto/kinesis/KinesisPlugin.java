@@ -18,16 +18,17 @@ import com.facebook.presto.spi.Plugin;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import javax.inject.Inject;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Kinesis version of Presto Plugin interface. This class calls getServices method to create KinesisConnectorFactory
@@ -43,19 +44,19 @@ public class KinesisPlugin
     @Override
     public synchronized void setOptionalConfig(Map<String, String> optionalConfig)
     {
-        this.optionalConfig = ImmutableMap.copyOf(checkNotNull(optionalConfig, "optionalConfig is null"));
+        this.optionalConfig = ImmutableMap.copyOf(requireNonNull(optionalConfig, "optionalConfig is null"));
     }
 
     @Inject
     public synchronized void setTypeManager(TypeManager typeManager)
     {
-        this.typeManager = checkNotNull(typeManager, "typeManager is null");
+        this.typeManager = requireNonNull(typeManager, "typeManager is null");
     }
 
     @VisibleForTesting
     public synchronized void setTableDescriptionSupplier(Supplier<Map<SchemaTableName, KinesisStreamDescription>> tableDescriptionSupplier)
     {
-        this.tableDescriptionSupplier = Optional.of(checkNotNull(tableDescriptionSupplier, "tableDescriptionSupplier is null"));
+        this.tableDescriptionSupplier = Optional.of(requireNonNull(tableDescriptionSupplier, "tableDescriptionSupplier is null"));
     }
 
     @Override

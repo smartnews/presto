@@ -13,12 +13,12 @@
  */
 package com.facebook.presto.kinesis.decoder;
 
+import com.facebook.presto.kinesis.KinesisColumnHandle;
+import com.facebook.presto.kinesis.KinesisFieldValueProvider;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.facebook.presto.kinesis.KinesisColumnHandle;
-import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 
 public interface KinesisRowDecoder
 {
@@ -30,10 +30,10 @@ public interface KinesisRowDecoder
     /**
      * Decodes a given set of bytes into field values.
      *
-     * @param data The row data (Kinesis message) to decode.
+     * @param data                The row data (Kinesis message) to decode.
      * @param fieldValueProviders Must be a mutable set. Any field value provider created by this row decoder is put into this set.
-     * @param columnHandles List of column handles for which field values are required.
-     * @param fieldDecoders Map from column handles to decoders. This map should be used to look up the field decoder that generates the field value provider for a given column handle.
+     * @param columnHandles       List of column handles for which field values are required.
+     * @param fieldDecoders       Map from column handles to decoders. This map should be used to look up the field decoder that generates the field value provider for a given column handle.
      * @return true if the row was decoded successfully, false if it could not be decoded (was corrupt). TODO - reverse this boolean.
      */
     boolean decodeRow(

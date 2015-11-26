@@ -13,23 +13,22 @@
  */
 package com.facebook.presto.kinesis.decoder.csv;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import au.com.bytecode.opencsv.CSVParser;
-
 import com.facebook.presto.kinesis.KinesisColumnHandle;
 import com.facebook.presto.kinesis.KinesisFieldValueProvider;
 import com.facebook.presto.kinesis.decoder.KinesisFieldDecoder;
 import com.facebook.presto.kinesis.decoder.KinesisRowDecoder;
 import com.google.inject.Inject;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkState;
+
 public class CsvKinesisRowDecoder
-            implements KinesisRowDecoder
+        implements KinesisRowDecoder
 {
     public static final String NAME = "csv";
 
@@ -48,9 +47,9 @@ public class CsvKinesisRowDecoder
 
     @Override
     public boolean decodeRow(byte[] data,
-            Set<KinesisFieldValueProvider> fieldValueProviders,
-            List<KinesisColumnHandle> columnHandles,
-            Map<KinesisColumnHandle, KinesisFieldDecoder<?>> fieldDecoders)
+                             Set<KinesisFieldValueProvider> fieldValueProviders,
+                             List<KinesisColumnHandle> columnHandles,
+                             Map<KinesisColumnHandle, KinesisFieldDecoder<?>> fieldDecoders)
     {
         String[] fields;
         try {

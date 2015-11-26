@@ -13,18 +13,16 @@
  */
 package com.facebook.presto.kinesis;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Objects.requireNonNull;
+
 /**
- *
- *  This Class maintains all the details of Kinesis stream like name, fields of data, Presto table stream is mapping to, tables's schema name
- *
+ * This Class maintains all the details of Kinesis stream like name, fields of data, Presto table stream is mapping to, tables's schema name
  */
 public class KinesisStreamDescription
 {
@@ -42,7 +40,7 @@ public class KinesisStreamDescription
     {
         checkArgument(!isNullOrEmpty(tableName), "tableName is null or is empty");
         this.tableName = tableName;
-        this.streamName = checkNotNull(streamName, "topicName is null");
+        this.streamName = requireNonNull(streamName, "topicName is null");
         this.schemaName = schemaName;
         this.message = message;
     }

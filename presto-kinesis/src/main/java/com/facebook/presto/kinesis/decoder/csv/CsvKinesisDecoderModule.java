@@ -13,11 +13,11 @@
  */
 package com.facebook.presto.kinesis.decoder.csv;
 
-import static com.facebook.presto.kinesis.decoder.KinesisDecoderModule.bindFieldDecoder;
-import static com.facebook.presto.kinesis.decoder.KinesisDecoderModule.bindRowDecoder;
-
 import com.google.inject.Binder;
 import com.google.inject.Module;
+
+import static com.facebook.presto.kinesis.decoder.KinesisDecoderModule.bindFieldDecoder;
+import static com.facebook.presto.kinesis.decoder.KinesisDecoderModule.bindRowDecoder;
 
 public class CsvKinesisDecoderModule
         implements Module
