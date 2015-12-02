@@ -90,7 +90,6 @@ public class KinesisSplitManager
             else {
                 exclusiveStartShardId = null;
             }
-
         } while (exclusiveStartShardId != null);
 
         return new ConnectorPartitionResult(builder.build(), tupleDomain);
