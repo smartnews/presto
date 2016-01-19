@@ -14,7 +14,6 @@
 package com.facebook.presto.kinesis;
 
 import com.facebook.presto.spi.Connector;
-import com.facebook.presto.spi.ConnectorHandleResolver;
 import com.facebook.presto.spi.ConnectorIndexResolver;
 import com.facebook.presto.spi.ConnectorMetadata;
 import com.facebook.presto.spi.ConnectorPageSourceProvider;
@@ -53,12 +52,6 @@ public class KinesisConnector
     }
 
     @Override
-    public ConnectorHandleResolver getHandleResolver()
-    {
-        return handleResolver;
-    }
-
-    @Override
     public ConnectorMetadata getMetadata()
     {
         return metadata;
@@ -91,7 +84,7 @@ public class KinesisConnector
     @Override
     public ConnectorIndexResolver getIndexResolver()
     {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override

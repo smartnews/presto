@@ -15,6 +15,7 @@ package com.facebook.presto.kinesis;
 
 import com.facebook.presto.spi.Connector;
 import com.facebook.presto.spi.ConnectorFactory;
+import com.facebook.presto.spi.ConnectorHandleResolver;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.base.Throwables;
@@ -58,6 +59,12 @@ public class KinesisConnectorFactory
     public String getName()
     {
         return "kinesis";
+    }
+
+    @Override
+    public ConnectorHandleResolver getHandleResolver()
+    {
+        return new KinesisHandleResolver();
     }
 
     @Override
