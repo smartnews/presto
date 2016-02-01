@@ -19,7 +19,11 @@ import com.facebook.presto.spi.ColumnMetadata;
 import com.facebook.presto.spi.ConnectorMetadata;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorTableHandle;
+import com.facebook.presto.spi.ConnectorTableLayout;
+import com.facebook.presto.spi.ConnectorTableLayoutHandle;
+import com.facebook.presto.spi.ConnectorTableLayoutResult;
 import com.facebook.presto.spi.ConnectorTableMetadata;
+import com.facebook.presto.spi.Constraint;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.SchemaTablePrefix;
 import com.facebook.presto.spi.TableNotFoundException;
@@ -33,9 +37,11 @@ import io.airlift.log.Logger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import static com.facebook.presto.kinesis.KinesisHandleResolver.convertTableHandle;
 import static java.util.Objects.requireNonNull;
 
 public class KinesisMetadata
@@ -67,6 +73,11 @@ public class KinesisMetadata
         this.internalFieldDescriptions = requireNonNull(internalFieldDescriptions, "internalFieldDescriptions is null");
     }
 
+    private static String getDataFormat(KinesisStreamFieldGroup fieldGroup)
+    {
+        return (fieldGroup == null) ? DummyKinesisRowDecoder.NAME : fieldGroup.getDataFormat();
+    }
+
     @Override
     public List<String> listSchemaNames(ConnectorSession session)
     {
@@ -95,7 +106,7 @@ public class KinesisMetadata
     @Override
     public ConnectorTableMetadata getTableMetadata(ConnectorSession session, ConnectorTableHandle table)
     {
-        KinesisTableHandle kinesisTableHandle = handleResolver.convertTableHandle(table);
+        KinesisTableHandle kinesisTableHandle = convertTableHandle(table);
         return getTableMetadata(kinesisTableHandle.toSchemaTableName());
     }
 
@@ -121,7 +132,7 @@ public class KinesisMetadata
     @Override
     public Map<String, ColumnHandle> getColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle)
     {
-        KinesisTableHandle kinesisTableHandle = handleResolver.convertTableHandle(tableHandle);
+        KinesisTableHandle kinesisTableHandle = convertTableHandle(tableHandle);
 
         KinesisStreamDescription kinesisStreamDescription = getDefinedTables().get(kinesisTableHandle.toSchemaTableName());
         if (kinesisStreamDescription == null) {
@@ -161,7 +172,7 @@ public class KinesisMetadata
     @Override
     public ColumnMetadata getColumnMetadata(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle columnHandle)
     {
-        handleResolver.convertTableHandle(tableHandle);
+        convertTableHandle(tableHandle);
         KinesisColumnHandle kinesisColumnHandle = handleResolver.convertColumnHandle(columnHandle);
 
         return kinesisColumnHandle.getColumnMetadata();
@@ -184,11 +195,6 @@ public class KinesisMetadata
             }
         }
         return columns.build();
-    }
-
-    private static String getDataFormat(KinesisStreamFieldGroup fieldGroup)
-    {
-        return (fieldGroup == null) ? DummyKinesisRowDecoder.NAME : fieldGroup.getDataFormat();
     }
 
     @VisibleForTesting
@@ -221,5 +227,19 @@ public class KinesisMetadata
         }
 
         return new ConnectorTableMetadata(schemaTableName, builder.build());
+    }
+
+    @Override
+    public List<ConnectorTableLayoutResult> getTableLayouts(ConnectorSession session, ConnectorTableHandle table, Constraint<ColumnHandle> constraint, Optional<Set<ColumnHandle>> desiredColumns)
+    {
+        KinesisTableHandle handle = convertTableHandle(table);
+        ConnectorTableLayout layout = new ConnectorTableLayout(new KinesisTableLayoutHandle(handle));
+        return ImmutableList.of(new ConnectorTableLayoutResult(layout, constraint.getSummary()));
+    }
+
+    @Override
+    public ConnectorTableLayout getTableLayout(ConnectorSession session, ConnectorTableLayoutHandle handle)
+    {
+        return new ConnectorTableLayout(handle);
     }
 }

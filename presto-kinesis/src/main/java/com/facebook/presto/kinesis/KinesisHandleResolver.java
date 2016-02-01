@@ -20,6 +20,7 @@ import com.facebook.presto.spi.ConnectorInsertTableHandle;
 import com.facebook.presto.spi.ConnectorOutputTableHandle;
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.ConnectorTableHandle;
+import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -31,6 +32,12 @@ public class KinesisHandleResolver
     public Class<? extends ConnectorTableHandle> getTableHandleClass()
     {
         return KinesisTableHandle.class;
+    }
+
+    @Override
+    public Class<? extends ConnectorTableLayoutHandle> getTableLayoutHandleClass()
+    {
+        return KinesisTableLayoutHandle.class;
     }
 
     @Override
@@ -63,7 +70,7 @@ public class KinesisHandleResolver
         throw new UnsupportedOperationException();
     }
 
-    KinesisTableHandle convertTableHandle(ConnectorTableHandle tableHandle)
+    static KinesisTableHandle convertTableHandle(ConnectorTableHandle tableHandle)
     {
         requireNonNull(tableHandle, "tableHandle is null");
         checkArgument(tableHandle instanceof KinesisTableHandle, "tableHandle is not an instance of KinesisTableHandle");
@@ -72,7 +79,7 @@ public class KinesisHandleResolver
         return kinesisTableHandle;
     }
 
-    KinesisColumnHandle convertColumnHandle(ColumnHandle columnHandle)
+    static KinesisColumnHandle convertColumnHandle(ColumnHandle columnHandle)
     {
         requireNonNull(columnHandle, "columnHandle is null");
         checkArgument(columnHandle instanceof KinesisColumnHandle, "columnHandle is not an instance of KinesisColumnHandle");
@@ -80,11 +87,18 @@ public class KinesisHandleResolver
         return kinesisColumnHandle;
     }
 
-    KinesisSplit convertSplit(ConnectorSplit split)
+    static KinesisSplit convertSplit(ConnectorSplit split)
     {
         requireNonNull(split, "split is null");
         checkArgument(split instanceof KinesisSplit, "split is not an instance of KinesisSplit");
         KinesisSplit kinesisSplit = (KinesisSplit) split;
         return kinesisSplit;
+    }
+
+    static KinesisTableLayoutHandle convertLayout(ConnectorTableLayoutHandle layout)
+    {
+        requireNonNull(layout, "layout is null");
+        checkArgument(layout instanceof KinesisTableLayoutHandle, "layout is not an instance of KinesisTableLayoutHandle");
+        return (KinesisTableLayoutHandle) layout;
     }
 }

@@ -17,25 +17,20 @@ import com.amazonaws.services.kinesis.model.DescribeStreamRequest;
 import com.amazonaws.services.kinesis.model.DescribeStreamResult;
 import com.amazonaws.services.kinesis.model.ResourceNotFoundException;
 import com.amazonaws.services.kinesis.model.Shard;
-import com.facebook.presto.spi.ColumnHandle;
-import com.facebook.presto.spi.ConnectorPartition;
-import com.facebook.presto.spi.ConnectorPartitionResult;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.ConnectorSplitManager;
 import com.facebook.presto.spi.ConnectorSplitSource;
-import com.facebook.presto.spi.ConnectorTableHandle;
+import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 import com.facebook.presto.spi.FixedSplitSource;
-import com.facebook.presto.spi.predicate.TupleDomain;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import javax.inject.Named;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.facebook.presto.kinesis.KinesisHandleResolver.convertLayout;
 
 /**
  * Split data chunk from kinesis Stream to multiple small chunks for parallelization and distribution to multiple Presto workers.
@@ -59,9 +54,9 @@ public class KinesisSplitManager
     }
 
     @Override
-    public ConnectorPartitionResult getPartitions(ConnectorSession session, ConnectorTableHandle table, TupleDomain<ColumnHandle> tupleDomain)
+    public ConnectorSplitSource getSplits(ConnectorSession session, ConnectorTableLayoutHandle layout)
     {
-        KinesisTableHandle kinesisTableHandle = handleResolver.convertTableHandle(table);
+        KinesisTableHandle kinesisTableHandle = convertLayout(layout).getTable();
 
         DescribeStreamRequest describeStreamRequest = clientManager.getDescribeStreamRequest();
         describeStreamRequest.setStreamName(kinesisTableHandle.getStreamName());
@@ -75,13 +70,18 @@ public class KinesisSplitManager
             throw new ResourceNotFoundException("Stream not Active");
         }
 
-        List<Shard> shards = new ArrayList<>();
-        ImmutableList.Builder<ConnectorPartition> builder = ImmutableList.builder();
+        ImmutableList.Builder<ConnectorSplit> builder = ImmutableList.builder();
         do {
-            shards.addAll(describeStreamResult.getStreamDescription().getShards());
+            List<Shard> shards = describeStreamResult.getStreamDescription().getShards();
 
             for (Shard shard : shards) {
-                builder.add(new KinesisShard(kinesisTableHandle.getStreamName(), shard));
+                KinesisSplit split = new KinesisSplit(connectorId,
+                        kinesisTableHandle.getStreamName(),
+                        kinesisTableHandle.getMessageDataFormat(),
+                        shard.getShardId(),
+                        shard.getSequenceNumberRange().getStartingSequenceNumber(),
+                        shard.getSequenceNumberRange().getEndingSequenceNumber());
+                builder.add(split);
             }
 
             if (describeStreamResult.getStreamDescription().getHasMoreShards() && (shards.size() > 0)) {
@@ -91,29 +91,6 @@ public class KinesisSplitManager
                 exclusiveStartShardId = null;
             }
         } while (exclusiveStartShardId != null);
-
-        return new ConnectorPartitionResult(builder.build(), tupleDomain);
-    }
-
-    @Override
-    public ConnectorSplitSource getPartitionSplits(ConnectorSession session, ConnectorTableHandle table, List<ConnectorPartition> partitions)
-    {
-        KinesisTableHandle kinesisTableHandle = handleResolver.convertTableHandle(table);
-
-        ImmutableList.Builder<ConnectorSplit> builder = ImmutableList.builder();
-
-        for (ConnectorPartition cp : partitions) {
-            checkState(cp instanceof KinesisShard, "Found an unkown partition type: %s", cp.getClass().getSimpleName());
-            KinesisShard kinesisShard = (KinesisShard) cp;
-
-            KinesisSplit split = new KinesisSplit(connectorId,
-                    kinesisShard.getStreamName(),
-                    kinesisTableHandle.getMessageDataFormat(),
-                    kinesisShard.getPartitionId(),
-                    kinesisShard.getShard().getSequenceNumberRange().getStartingSequenceNumber(),
-                    kinesisShard.getShard().getSequenceNumberRange().getEndingSequenceNumber());
-            builder.add(split);
-        }
 
         return new FixedSplitSource(connectorId, builder.build());
     }
