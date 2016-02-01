@@ -38,6 +38,7 @@ public class SmartnewsFunctionFactory
                 .aggregate(HyperLogLogMergeAggregation.class)
                 .scalar(HyperLogLogFunctions.class)
                 .scalar(HttpFunctions.class)
+                .scalar(ExtendedFunctions.class)
                 .getFunctions();
     }
 }
