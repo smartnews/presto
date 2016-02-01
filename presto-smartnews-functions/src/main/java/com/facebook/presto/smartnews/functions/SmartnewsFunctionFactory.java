@@ -37,6 +37,7 @@ public class SmartnewsFunctionFactory
         return new FunctionListBuilder(typeManager)
                 .aggregate(HyperLogLogMergeAggregation.class)
                 .scalar(HyperLogLogFunctions.class)
+                .scalar(HttpFunctions.class)
                 .getFunctions();
     }
 }
