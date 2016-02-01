@@ -531,6 +531,14 @@ public class PrestoResultSet
                 if (columnInfo.getColumnTypeName().equalsIgnoreCase("interval day to second")) {
                     return getIntervalDayTime(columnIndex);
                 }
+                // work around to fix the display problem in Squirrel SQL
+                // todo : find a better solution
+                if (columnInfo.getColumnTypeName().startsWith("map")) {
+                    return getString(columnIndex);
+                }
+                if (columnInfo.getColumnTypeName().startsWith("row")) {
+                    return getString(columnIndex);
+                }
         }
         return column(columnIndex);
     }
