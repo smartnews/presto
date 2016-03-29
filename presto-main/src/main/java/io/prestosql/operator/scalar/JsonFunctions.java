@@ -432,7 +432,7 @@ public final class JsonFunctions
         }
     }
 
-    @ScalarFunction("json_extract_scalar")
+    @ScalarFunction(value = "json_extract_scalar", alias = "j")
     @SqlNullable
     @LiteralParameters("x")
     @SqlType("varchar(x)")
@@ -441,7 +441,7 @@ public final class JsonFunctions
         return JsonExtract.extract(json, jsonPath.getScalarExtractor());
     }
 
-    @ScalarFunction
+    @ScalarFunction(alias = "j")
     @SqlNullable
     @SqlType(StandardTypes.VARCHAR)
     public static Slice jsonExtractScalar(@SqlType(StandardTypes.JSON) Slice json, @SqlType(JsonPathType.NAME) JsonPath jsonPath)

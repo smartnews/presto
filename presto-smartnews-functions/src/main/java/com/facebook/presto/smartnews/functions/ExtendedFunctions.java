@@ -14,7 +14,9 @@
 package com.facebook.presto.smartnews.functions;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONPath;
+import com.alibaba.fastjson.parser.Feature;
 import com.facebook.presto.operator.Description;
 import com.facebook.presto.operator.scalar.ScalarFunction;
 import com.facebook.presto.spi.type.StandardTypes;
@@ -39,7 +41,8 @@ public final class ExtendedFunctions
             .maximumSize(500)
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(
-                    new CacheLoader<Slice, JSONPath>() {
+                    new CacheLoader<Slice, JSONPath>()
+                    {
                         public JSONPath load(Slice jsonPath) throws Exception
                         {
                             return JSONPath.compile(jsonPath.toStringUtf8());
@@ -51,7 +54,7 @@ public final class ExtendedFunctions
         //no instance
     }
 
-    @ScalarFunction("j")
+    @ScalarFunction("fj")
     @Description("com.alibaba.fastjson -based JSON extraction: j(JSON_OBJECT, 'JSON_PATH') (= fast version of json_extract_scalar)")
     @Nullable
     @SqlType(StandardTypes.VARCHAR)
@@ -65,7 +68,7 @@ public final class ExtendedFunctions
         }
     }
 
-    @ScalarFunction("j")
+    @ScalarFunction("fj")
     @Nullable
     @SqlType(StandardTypes.VARCHAR)
     public static Slice jsonFastJsonExtract(@SqlType(StandardTypes.JSON) Slice json, @SqlType(StandardTypes.VARCHAR) Slice jsonPath)
@@ -78,8 +81,20 @@ public final class ExtendedFunctions
         }
     }
 
-    private static Slice jsonGet(String json, JSONPath jsonPath)
+    public static Slice jsonGet(String json, JSONPath jsonPath)
     {
-        return Slices.utf8Slice(jsonPath.eval(JSON.parse(json)).toString());
+        if (json != null) {
+            JSONObject o = JSON.parseObject(json,
+                    Feature.DisableCircularReferenceDetect);
+
+            if (o != null) {
+                Object extracted = jsonPath.eval(o);
+                if (extracted != null) {
+                    return Slices.utf8Slice(String.valueOf(extracted));
+                }
+            }
+        }
+
+        return null;
     }
 }
