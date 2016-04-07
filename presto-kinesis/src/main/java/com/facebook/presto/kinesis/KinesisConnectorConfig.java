@@ -63,12 +63,12 @@ public class KinesisConnectorConfig
     /**
      * Defines maximum number of records to return in one call
      */
-    private int batchSize = 10000;
+    private int batchSize = 4096;
 
     /**
      * Defines number of attempts to fetch records from stream until received non-empty
      */
-    private int fetchAttmepts = 3;
+    private int fetchAttmepts = 2;
 
     /**
      * Defines sleep time (in milliseconds) for the thread which is trying to fetch the records from kinesis streams

@@ -213,7 +213,7 @@ public class KinesisRecordSet
 
             while (true) {
                 log.debug("Reading data from shardIterator %s", shardIterator);
-                while (listIterator.hasNext()) {
+                if (listIterator.hasNext()) {
                     return nextRow();
                 }
 
@@ -240,10 +240,13 @@ public class KinesisRecordSet
             getRecordsRequest.setLimit(batchSize);
 
             int count = 0;
-            int maxTries = 5;
+            int maxTries = 9;
             while (true) {
                 try {
                     getRecordsResult = clientManager.getClient().getRecords(getRecordsRequest);
+                    log.info(split.getShardId() + " gotRecords: cnt:" + getRecordsResult.getRecords().size() +
+                            " behind:" + getRecordsResult.getMillisBehindLatest() +
+                            " totalBytes:" + totalBytes);
                     break;
                 }
                 catch (ProvisionedThroughputExceededException e) {
@@ -253,7 +256,7 @@ public class KinesisRecordSet
                         throw e;
                     }
                     try {
-                        Thread.sleep(sleepTime * 2);
+                        Thread.sleep((long) (sleepTime * Math.pow(1.2, count - 1)));
                     }
                     catch (InterruptedException ie) {
                     }
