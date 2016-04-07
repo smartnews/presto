@@ -15,13 +15,13 @@ package com.facebook.presto.kinesis;
 
 import com.facebook.presto.kinesis.decoder.dummy.DummyKinesisRowDecoder;
 import com.facebook.presto.spi.SchemaTableName;
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import io.airlift.json.JsonCodec;
 import io.airlift.log.Logger;
-import org.weakref.jmx.internal.guava.base.Objects;
 
 import java.io.File;
 import java.io.IOException;
