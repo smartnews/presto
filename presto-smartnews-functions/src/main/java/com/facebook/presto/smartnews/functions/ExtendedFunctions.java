@@ -97,4 +97,18 @@ public final class ExtendedFunctions
 
         return null;
     }
+
+    @ScalarFunction
+    @SqlType(StandardTypes.BIGINT)
+    public static long hashInto(@SqlType(StandardTypes.VARCHAR) Slice str, @SqlType(StandardTypes.BIGINT) long hashDimension)
+    {
+        long r = 0;
+        r = r * 31 + str.toStringUtf8().hashCode();
+        r = r % hashDimension;
+
+        if (r < 0) {
+            r += hashDimension;
+        }
+        return 1 + r;
+    }
 }
