@@ -533,10 +533,10 @@ public class PrestoResultSet
                 }
                 // work around to fix the display problem in Squirrel SQL
                 // todo : find a better solution
-                if (columnInfo.getColumnTypeName().startsWith("map")) {
+                if (columnInfo.getColumnTypeName().toLowerCase().startsWith("map")) {
                     return getString(columnIndex);
                 }
-                if (columnInfo.getColumnTypeName().startsWith("row")) {
+                if (columnInfo.getColumnTypeName().toLowerCase().startsWith("row")) {
                     return getString(columnIndex);
                 }
         }
