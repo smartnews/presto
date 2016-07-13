@@ -27,7 +27,7 @@ public final class HyperLogLogFunctions
     }
 
     @Description("get the approximated cardinality of the HyperLogLog")
-    @ScalarFunction
+    @ScalarFunction("pfcount")
     @SqlType(StandardTypes.BIGINT)
     public static long pfcount(@SqlType(StandardTypes.VARBINARY) Slice slice)
     {
