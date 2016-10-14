@@ -19,6 +19,10 @@ import com.alibaba.fastjson.JSONPath;
 import com.alibaba.fastjson.parser.Feature;
 import com.facebook.presto.operator.Description;
 import com.facebook.presto.operator.scalar.ScalarFunction;
+import com.facebook.presto.spi.function.Description;
+import com.facebook.presto.spi.function.ScalarFunction;
+import com.facebook.presto.spi.function.SqlNullable;
+import com.facebook.presto.spi.function.SqlType;
 import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.type.SqlType;
 import com.google.common.cache.CacheBuilder;
@@ -26,8 +30,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
-
-import javax.annotation.Nullable;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +58,7 @@ public final class ExtendedFunctions
 
     @ScalarFunction("fj")
     @Description("com.alibaba.fastjson -based JSON extraction: j(JSON_OBJECT, 'JSON_PATH') (= fast version of json_extract_scalar)")
-    @Nullable
+    @SqlNullable
     @SqlType(StandardTypes.VARCHAR)
     public static Slice varcharFastJsonExtract(@SqlType(StandardTypes.VARCHAR) Slice json, @SqlType(StandardTypes.VARCHAR) Slice jsonPath)
     {
@@ -69,7 +71,7 @@ public final class ExtendedFunctions
     }
 
     @ScalarFunction("fj")
-    @Nullable
+    @SqlNullable
     @SqlType(StandardTypes.VARCHAR)
     public static Slice jsonFastJsonExtract(@SqlType(StandardTypes.JSON) Slice json, @SqlType(StandardTypes.VARCHAR) Slice jsonPath)
     {

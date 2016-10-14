@@ -17,6 +17,7 @@ import com.facebook.presto.operator.scalar.ScalarFunction;
 import com.facebook.presto.spi.PrestoException;
 import com.facebook.presto.spi.StandardErrorCode;
 import com.facebook.presto.spi.function.ScalarFunction;
+import com.facebook.presto.spi.function.SqlNullable;
 import com.facebook.presto.spi.function.SqlType;
 import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.type.SqlType;
@@ -26,8 +27,6 @@ import io.airlift.http.client.jetty.JettyHttpClient;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.airlift.units.Duration;
-
-import javax.annotation.Nullable;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -50,7 +49,7 @@ public final class HttpFunctions
     }
 
     @ScalarFunction("http_get")
-    @Nullable
+    @SqlNullable
     @SqlType(StandardTypes.VARCHAR)
     public static Slice httpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
     {
@@ -72,7 +71,7 @@ public final class HttpFunctions
     }
 
     @ScalarFunction("try_http_get")
-    @Nullable
+    @SqlNullable
     @SqlType(StandardTypes.VARCHAR)
     public static Slice tryHttpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
     {
