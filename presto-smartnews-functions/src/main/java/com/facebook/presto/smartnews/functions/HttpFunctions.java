@@ -14,6 +14,10 @@
 package com.facebook.presto.smartnews.functions;
 
 import com.facebook.presto.operator.scalar.ScalarFunction;
+import com.facebook.presto.spi.PrestoException;
+import com.facebook.presto.spi.StandardErrorCode;
+import com.facebook.presto.spi.function.ScalarFunction;
+import com.facebook.presto.spi.function.SqlType;
 import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.type.SqlType;
 import io.airlift.http.client.HttpClient;
@@ -51,7 +55,6 @@ public final class HttpFunctions
     public static Slice httpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
     {
         String url = slice.toStringUtf8();
-
         try {
             String body = HTTP_CLIENT.execute(
                     prepareGet().setUri(new URI(url)).build(),
@@ -60,6 +63,27 @@ public final class HttpFunctions
             return Slices.utf8Slice(body);
         }
         catch (URISyntaxException e) {
+            return null;
+        }
+        catch (IllegalArgumentException e) {
+            throw new PrestoException(StandardErrorCode.INVALID_FUNCTION_ARGUMENT,
+                    "Error when access " + url + ":\n" + e.toString());
+        }
+    }
+
+    @ScalarFunction("try_http_get")
+    @Nullable
+    @SqlType(StandardTypes.VARCHAR)
+    public static Slice tryHttpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
+    {
+        String url = slice.toStringUtf8();
+        try {
+            String body = HTTP_CLIENT.execute(
+                    prepareGet().setUri(new URI(url)).build(),
+                    createStringResponseHandler()).getBody();
+            return Slices.utf8Slice(body);
+        }
+        catch (Exception e) {
             return null;
         }
     }
