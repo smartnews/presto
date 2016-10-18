@@ -21,6 +21,7 @@ import com.facebook.presto.spi.ConnectorOutputTableHandle;
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.ConnectorTableHandle;
 import com.facebook.presto.spi.ConnectorTableLayoutHandle;
+import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -28,6 +29,38 @@ import static java.util.Objects.requireNonNull;
 public class KinesisHandleResolver
         implements ConnectorHandleResolver
 {
+    static KinesisTableHandle convertTableHandle(ConnectorTableHandle tableHandle)
+    {
+        requireNonNull(tableHandle, "tableHandle is null");
+        checkArgument(tableHandle instanceof KinesisTableHandle, "tableHandle is not an instance of KinesisTableHandle");
+        KinesisTableHandle kinesisTableHandle = (KinesisTableHandle) tableHandle;
+
+        return kinesisTableHandle;
+    }
+
+    static KinesisColumnHandle convertColumnHandle(ColumnHandle columnHandle)
+    {
+        requireNonNull(columnHandle, "columnHandle is null");
+        checkArgument(columnHandle instanceof KinesisColumnHandle, "columnHandle is not an instance of KinesisColumnHandle");
+        KinesisColumnHandle kinesisColumnHandle = (KinesisColumnHandle) columnHandle;
+        return kinesisColumnHandle;
+    }
+
+    static KinesisSplit convertSplit(ConnectorSplit split)
+    {
+        requireNonNull(split, "split is null");
+        checkArgument(split instanceof KinesisSplit, "split is not an instance of KinesisSplit");
+        KinesisSplit kinesisSplit = (KinesisSplit) split;
+        return kinesisSplit;
+    }
+
+    static KinesisTableLayoutHandle convertLayout(ConnectorTableLayoutHandle layout)
+    {
+        requireNonNull(layout, "layout is null");
+        checkArgument(layout instanceof KinesisTableLayoutHandle, "layout is not an instance of KinesisTableLayoutHandle");
+        return (KinesisTableLayoutHandle) layout;
+    }
+
     @Override
     public Class<? extends ConnectorTableHandle> getTableHandleClass()
     {
@@ -70,35 +103,9 @@ public class KinesisHandleResolver
         throw new UnsupportedOperationException();
     }
 
-    static KinesisTableHandle convertTableHandle(ConnectorTableHandle tableHandle)
+    @Override
+    public Class<? extends ConnectorTransactionHandle> getTransactionHandleClass()
     {
-        requireNonNull(tableHandle, "tableHandle is null");
-        checkArgument(tableHandle instanceof KinesisTableHandle, "tableHandle is not an instance of KinesisTableHandle");
-        KinesisTableHandle kinesisTableHandle = (KinesisTableHandle) tableHandle;
-
-        return kinesisTableHandle;
-    }
-
-    static KinesisColumnHandle convertColumnHandle(ColumnHandle columnHandle)
-    {
-        requireNonNull(columnHandle, "columnHandle is null");
-        checkArgument(columnHandle instanceof KinesisColumnHandle, "columnHandle is not an instance of KinesisColumnHandle");
-        KinesisColumnHandle kinesisColumnHandle = (KinesisColumnHandle) columnHandle;
-        return kinesisColumnHandle;
-    }
-
-    static KinesisSplit convertSplit(ConnectorSplit split)
-    {
-        requireNonNull(split, "split is null");
-        checkArgument(split instanceof KinesisSplit, "split is not an instance of KinesisSplit");
-        KinesisSplit kinesisSplit = (KinesisSplit) split;
-        return kinesisSplit;
-    }
-
-    static KinesisTableLayoutHandle convertLayout(ConnectorTableLayoutHandle layout)
-    {
-        requireNonNull(layout, "layout is null");
-        checkArgument(layout instanceof KinesisTableLayoutHandle, "layout is not an instance of KinesisTableLayoutHandle");
-        return (KinesisTableLayoutHandle) layout;
+        return KinesisTransactionHandle.class;
     }
 }

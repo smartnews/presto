@@ -25,6 +25,8 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
+import static com.facebook.presto.spi.transaction.IsolationLevel.READ_COMMITTED;
+import static com.facebook.presto.spi.transaction.IsolationLevel.checkConnectorSupports;
 import static java.util.Objects.requireNonNull;
 
 public class KinesisConnector
@@ -52,7 +54,18 @@ public class KinesisConnector
     }
 
     @Override
+<<<<<<< HEAD
     public ConnectorMetadata getMetadata()
+=======
+    public ConnectorTransactionHandle beginTransaction(IsolationLevel isolationLevel, boolean readOnly)
+    {
+        checkConnectorSupports(READ_COMMITTED, isolationLevel);
+        return KinesisTransactionHandle.INSTANCE;
+    }
+
+    @Override
+    public ConnectorMetadata getMetadata(ConnectorTransactionHandle transactionHandle)
+>>>>>>> fix kinesis connector
     {
         return metadata;
     }
