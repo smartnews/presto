@@ -123,11 +123,13 @@ public class KinesisMetadata
         return builder.build();
     }
 
+    /*
     @Override
     public ColumnHandle getSampleWeightColumnHandle(ConnectorSession session, ConnectorTableHandle tableHandle)
     {
         return null;
     }
+    */
 
     @Override
     public Map<String, ColumnHandle> getColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle)
