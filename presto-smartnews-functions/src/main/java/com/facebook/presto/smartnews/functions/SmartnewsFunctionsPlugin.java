@@ -38,9 +38,12 @@ public class SmartnewsFunctionsPlugin
     @Override
     public <T> List<T> getServices(Class<T> type)
     {
-        if (type == FunctionFactory.class) {
-            return ImmutableList.of(type.cast(new SmartnewsFunctionFactory(typeManager)));
-        }
-        return ImmutableList.of();
+        return ImmutableSet.<Class<?>>builder()
+                .add(HyperLogLogMergeAggregation.class)
+                .add(HyperLogLogFunctions.class)
+                .add(HttpFunctions.class)
+                .add(AwsFunctions.class)
+                .add(ExtendedFunctions.class)
+                .build();
     }
 }
