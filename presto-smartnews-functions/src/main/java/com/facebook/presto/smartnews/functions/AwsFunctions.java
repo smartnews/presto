@@ -53,9 +53,11 @@ public final class AwsFunctions
 
     static {
         ClientConfiguration awsConfig = new ClientConfiguration();
+        awsConfig.setUseTcpKeepAlive(true);
         awsConfig.setProtocol(Protocol.HTTP);
         DDB_CLIENT = new AmazonDynamoDBAsyncClient(
                 new DefaultAWSCredentialsProviderChain(), awsConfig);
+
         DDB_CLIENT.configureRegion(Regions.AP_NORTHEAST_1);
         DDB = new DynamoDB(DDB_CLIENT);
 
