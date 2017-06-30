@@ -43,6 +43,7 @@ public class SmartnewsFunctionsPlugin
                 .add(HyperLogLogFunctions.class)
                 .add(HttpFunctions.class)
                 .add(AwsFunctions.class)
+                .add(AssertFunctions.class)
                 .add(ExtendedFunctions.class)
                 .build();
     }
