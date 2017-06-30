@@ -16,23 +16,27 @@ package com.facebook.presto.smartnews.functions;
 import com.facebook.presto.operator.scalar.ScalarFunction;
 import com.facebook.presto.spi.PrestoException;
 import com.facebook.presto.spi.StandardErrorCode;
+import com.facebook.presto.spi.block.Block;
 import com.facebook.presto.spi.function.ScalarFunction;
 import com.facebook.presto.spi.function.SqlNullable;
 import com.facebook.presto.spi.function.SqlType;
+import com.facebook.presto.spi.function.TypeParameter;
 import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.type.SqlType;
+import com.facebook.presto.spi.type.Type;
+import com.facebook.presto.spi.type.TypeUtils;
+import com.google.common.collect.ImmutableMap;
 import io.airlift.http.client.HttpClient;
 import io.airlift.http.client.HttpClientConfig;
+import io.airlift.http.client.Request;
 import io.airlift.http.client.jetty.JettyHttpClient;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
-import io.airlift.units.Duration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
-import static io.airlift.http.client.Request.Builder.prepareGet;
 import static io.airlift.http.client.StringResponseHandler.createStringResponseHandler;
 
 /**
@@ -42,23 +46,26 @@ public final class HttpFunctions
 {
     private static final HttpClient HTTP_CLIENT = new JettyHttpClient(
             new HttpClientConfig()
-                    .setConnectTimeout(new Duration(10, TimeUnit.SECONDS)));
+                    .setMaxConnections(512)
+                    .setMaxConnectionsPerServer(64)
+    );
 
     private HttpFunctions()
     {
+        HttpClientConfig config = new HttpClientConfig();
     }
 
-    @ScalarFunction("http_get")
-    @SqlNullable
-    @SqlType(StandardTypes.VARCHAR)
-    public static Slice httpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
+    private static Slice performHttp(String url, String method, Map<String, String> headers)
     {
-        String url = slice.toStringUtf8();
         try {
-            String body = HTTP_CLIENT.execute(
-                    prepareGet().setUri(new URI(url)).build(),
-                    createStringResponseHandler()).getBody();
+            Request.Builder builder = new Request.Builder().setMethod(method).setUri(new URI(url));
+            if (headers != null) {
+                for (Map.Entry<String, String> h : headers.entrySet()) {
+                    builder.setHeader(h.getKey(), h.getValue());
+                }
+            }
 
+            String body = HTTP_CLIENT.execute(builder.build(), createStringResponseHandler()).getBody();
             return Slices.utf8Slice(body);
         }
         catch (URISyntaxException e) {
@@ -70,20 +77,70 @@ public final class HttpFunctions
         }
     }
 
+    @ScalarFunction("http_get")
+    @SqlNullable
+    @SqlType(StandardTypes.VARCHAR)
+    public static Slice httpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
+    {
+        return performHttp(slice.toStringUtf8(), "GET", null);
+    }
+
+    @ScalarFunction("http_get")
+    @SqlNullable
+    @SqlType(StandardTypes.VARCHAR)
+    @TypeParameter("V")
+    public static Slice httpGet(
+            @TypeParameter("V") Type valueType,
+            @SqlType(StandardTypes.VARCHAR) Slice slice,
+            @SqlType("map<V,V>") Block headers)
+    {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        for (int i = 0; i < headers.getPositionCount(); i += 2) {
+            builder.put(
+                    ((Slice) TypeUtils.readNativeValue(valueType, headers, i)).toStringUtf8(),
+                    ((Slice) TypeUtils.readNativeValue(valueType, headers, i + 1)).toStringUtf8()
+            );
+        }
+        return performHttp(slice.toStringUtf8(), "GET", builder.build());
+    }
+
     @ScalarFunction("try_http_get")
     @SqlNullable
     @SqlType(StandardTypes.VARCHAR)
     public static Slice tryHttpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
     {
-        String url = slice.toStringUtf8();
         try {
-            String body = HTTP_CLIENT.execute(
-                    prepareGet().setUri(new URI(url)).build(),
-                    createStringResponseHandler()).getBody();
-            return Slices.utf8Slice(body);
+            return performHttp(slice.toStringUtf8(), "GET", null);
         }
         catch (Exception e) {
             return null;
         }
+    }
+
+    @ScalarFunction("http_post")
+    @SqlNullable
+    @SqlType(StandardTypes.VARCHAR)
+    public static Slice httpPost(@SqlType(StandardTypes.VARCHAR) Slice slice)
+    {
+        return performHttp(slice.toStringUtf8(), "POST", null);
+    }
+
+    @ScalarFunction("http_post")
+    @SqlNullable
+    @SqlType(StandardTypes.VARCHAR)
+    @TypeParameter("V")
+    public static Slice httpPost(
+            @TypeParameter("V") Type valueType,
+            @SqlType(StandardTypes.VARCHAR) Slice slice,
+            @SqlType("map<V,V>") Block headers)
+    {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        for (int i = 0; i < headers.getPositionCount(); i += 2) {
+            builder.put(
+                    ((Slice) TypeUtils.readNativeValue(valueType, headers, i)).toStringUtf8(),
+                    ((Slice) TypeUtils.readNativeValue(valueType, headers, i + 1)).toStringUtf8()
+            );
+        }
+        return performHttp(slice.toStringUtf8(), "POST", builder.build());
     }
 }
