@@ -19,12 +19,15 @@ import com.alibaba.fastjson.JSONPath;
 import com.alibaba.fastjson.parser.Feature;
 import com.facebook.presto.operator.Description;
 import com.facebook.presto.operator.scalar.ScalarFunction;
+import com.facebook.presto.spi.PrestoException;
 import com.facebook.presto.spi.function.Description;
 import com.facebook.presto.spi.function.ScalarFunction;
 import com.facebook.presto.spi.function.SqlNullable;
 import com.facebook.presto.spi.function.SqlType;
 import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.type.SqlType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -32,16 +35,39 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+import net.thisptr.jackson.jq.JsonQuery;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+
+import static com.facebook.presto.spi.StandardErrorCode.INVALID_FUNCTION_ARGUMENT;
 
 /**
  * Created by yuyanglan on 2/1/16.
  */
 public final class ExtendedFunctions
 {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final LoadingCache<String, JsonQuery> JSON_QUERY_CACHE;
+
+    static {
+        JSON_QUERY_CACHE = CacheBuilder.newBuilder()
+                .concurrencyLevel(10)
+                .maximumSize(100)
+                .expireAfterAccess(60, TimeUnit.SECONDS)
+                .build(new CacheLoader<String, JsonQuery>()
+                {
+                    @Override
+                    public JsonQuery load(String jsonQuery) throws Exception
+                    {
+                        return JsonQuery.compile(jsonQuery);
+                    }
+                });
+    }
+
     private static LoadingCache<Slice, JSONPath> jsonPathCache = CacheBuilder.newBuilder()
             .maximumSize(500)
             .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -88,7 +114,7 @@ public final class ExtendedFunctions
         }
     }
 
-    public static Slice jsonGet(String json, JSONPath jsonPath)
+    private static Slice jsonGet(String json, JSONPath jsonPath)
     {
         if (json != null) {
             JSONObject o = JSON.parseObject(json,
@@ -103,6 +129,22 @@ public final class ExtendedFunctions
         }
 
         return null;
+    }
+
+    @ScalarFunction("jq")
+    @SqlNullable
+    @SqlType(StandardTypes.JSON)
+    public static Slice jq(@SqlType(StandardTypes.VARCHAR) Slice json, @SqlType(StandardTypes.VARCHAR) Slice jsonQuery)
+    {
+        try {
+            JsonQuery query = JSON_QUERY_CACHE.get(jsonQuery.toStringUtf8());
+            JsonNode node = objectMapper.readTree(json.toStringUtf8());
+            List<JsonNode> result = query.apply(node);
+            return Slices.utf8Slice(objectMapper.writeValueAsString(result));
+        }
+        catch (IOException | ExecutionException e) {
+            throw new PrestoException(INVALID_FUNCTION_ARGUMENT, e.getMessage(), e);
+        }
     }
 
     @ScalarFunction
