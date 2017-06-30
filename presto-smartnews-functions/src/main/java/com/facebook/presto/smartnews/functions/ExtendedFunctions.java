@@ -28,9 +28,12 @@ import com.facebook.presto.type.SqlType;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +53,8 @@ public final class ExtendedFunctions
                             return JSONPath.compile(jsonPath.toStringUtf8());
                         }
                     });
+
+    private static HashFunction murmur3 = Hashing.murmur3_32(0x9747b28c);
 
     private ExtendedFunctions()
     {
@@ -112,5 +117,16 @@ public final class ExtendedFunctions
             r += hashDimension;
         }
         return 1 + r;
+    }
+
+    @ScalarFunction
+    @SqlType(StandardTypes.BIGINT)
+    public static long mhash(@SqlType(StandardTypes.VARCHAR) Slice str, @SqlType(StandardTypes.BIGINT) long hashDimension)
+    {
+        int l = (int) (murmur3.hashString(str.toStringUtf8(), StandardCharsets.UTF_8).asInt() % hashDimension);
+        if (l < 0) {
+            l += hashDimension;
+        }
+        return l + 1;
     }
 }
