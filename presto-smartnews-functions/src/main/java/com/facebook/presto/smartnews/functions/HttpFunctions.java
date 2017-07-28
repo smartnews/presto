@@ -153,4 +153,30 @@ public final class HttpFunctions
         return performHttp(url.toStringUtf8(), "POST", builder.build(),
                 data != null ? data.toStringUtf8() : null);
     }
+
+
+    @ScalarFunction("try_http_post")
+    @SqlNullable
+    @SqlType(StandardTypes.VARCHAR)
+    @TypeParameter("V")
+    public static Slice tryHttpPost(
+            @TypeParameter("V") Type valueType,
+            @SqlType(StandardTypes.VARCHAR) Slice url,
+            @SqlType(StandardTypes.VARCHAR) Slice data,
+            @SqlType("map<V,V>") Block headers)
+    {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        for (int i = 0; i < headers.getPositionCount(); i += 2) {
+            builder.put(
+                    ((Slice) TypeUtils.readNativeValue(valueType, headers, i)).toStringUtf8(),
+                    ((Slice) TypeUtils.readNativeValue(valueType, headers, i + 1)).toStringUtf8()
+            );
+        }
+        try {
+            return performHttp(url.toStringUtf8(), "POST", builder.build(),
+                    data != null ? data.toStringUtf8() : null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
