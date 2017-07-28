@@ -25,6 +25,7 @@ import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.type.SqlType;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.TypeUtils;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import io.airlift.http.client.HttpClient;
 import io.airlift.http.client.HttpClientConfig;
@@ -37,7 +38,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import static io.airlift.http.client.StaticBodyGenerator.createStaticBodyGenerator;
 import static io.airlift.http.client.StringResponseHandler.createStringResponseHandler;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Created by lan on 1/19/16.
@@ -55,7 +58,7 @@ public final class HttpFunctions
         HttpClientConfig config = new HttpClientConfig();
     }
 
-    private static Slice performHttp(String url, String method, Map<String, String> headers)
+    private static Slice performHttp(String url, String method, Map<String, String> headers, String data)
     {
         try {
             Request.Builder builder = new Request.Builder().setMethod(method).setUri(new URI(url));
@@ -63,6 +66,10 @@ public final class HttpFunctions
                 for (Map.Entry<String, String> h : headers.entrySet()) {
                     builder.setHeader(h.getKey(), h.getValue());
                 }
+            }
+
+            if (!Strings.isNullOrEmpty(data)) {
+                builder.setBodyGenerator(createStaticBodyGenerator(data, UTF_8));
             }
 
             String body = HTTP_CLIENT.execute(builder.build(), createStringResponseHandler()).getBody();
@@ -82,7 +89,7 @@ public final class HttpFunctions
     @SqlType(StandardTypes.VARCHAR)
     public static Slice httpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
     {
-        return performHttp(slice.toStringUtf8(), "GET", null);
+        return performHttp(slice.toStringUtf8(), "GET", null, null);
     }
 
     @ScalarFunction("http_get")
@@ -101,7 +108,7 @@ public final class HttpFunctions
                     ((Slice) TypeUtils.readNativeValue(valueType, headers, i + 1)).toStringUtf8()
             );
         }
-        return performHttp(slice.toStringUtf8(), "GET", builder.build());
+        return performHttp(slice.toStringUtf8(), "GET", builder.build(), null);
     }
 
     @ScalarFunction("try_http_get")
@@ -110,7 +117,7 @@ public final class HttpFunctions
     public static Slice tryHttpGet(@SqlType(StandardTypes.VARCHAR) Slice slice)
     {
         try {
-            return performHttp(slice.toStringUtf8(), "GET", null);
+            return performHttp(slice.toStringUtf8(), "GET", null, null);
         }
         catch (Exception e) {
             return null;
@@ -120,9 +127,10 @@ public final class HttpFunctions
     @ScalarFunction("http_post")
     @SqlNullable
     @SqlType(StandardTypes.VARCHAR)
-    public static Slice httpPost(@SqlType(StandardTypes.VARCHAR) Slice slice)
+    public static Slice httpPost(@SqlType(StandardTypes.VARCHAR) Slice url, @SqlType(StandardTypes.VARCHAR) Slice data)
     {
-        return performHttp(slice.toStringUtf8(), "POST", null);
+        return performHttp(url.toStringUtf8(), "POST", null,
+                data != null ? data.toStringUtf8() : null);
     }
 
     @ScalarFunction("http_post")
@@ -131,7 +139,8 @@ public final class HttpFunctions
     @TypeParameter("V")
     public static Slice httpPost(
             @TypeParameter("V") Type valueType,
-            @SqlType(StandardTypes.VARCHAR) Slice slice,
+            @SqlType(StandardTypes.VARCHAR) Slice url,
+            @SqlType(StandardTypes.VARCHAR) Slice data,
             @SqlType("map<V,V>") Block headers)
     {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
@@ -141,6 +150,7 @@ public final class HttpFunctions
                     ((Slice) TypeUtils.readNativeValue(valueType, headers, i + 1)).toStringUtf8()
             );
         }
-        return performHttp(slice.toStringUtf8(), "POST", builder.build());
+        return performHttp(url.toStringUtf8(), "POST", builder.build(),
+                data != null ? data.toStringUtf8() : null);
     }
 }
