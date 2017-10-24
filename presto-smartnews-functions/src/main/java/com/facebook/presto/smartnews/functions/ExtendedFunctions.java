@@ -61,7 +61,8 @@ public final class ExtendedFunctions
                 .build(new CacheLoader<String, JsonQuery>()
                 {
                     @Override
-                    public JsonQuery load(String jsonQuery) throws Exception
+                    public JsonQuery load(String jsonQuery)
+                            throws Exception
                     {
                         return JsonQuery.compile(jsonQuery);
                     }
@@ -74,7 +75,8 @@ public final class ExtendedFunctions
             .build(
                     new CacheLoader<Slice, JSONPath>()
                     {
-                        public JSONPath load(Slice jsonPath) throws Exception
+                        public JSONPath load(Slice jsonPath)
+                                throws Exception
                         {
                             return JSONPath.compile(jsonPath.toStringUtf8());
                         }
@@ -159,6 +161,13 @@ public final class ExtendedFunctions
             r += hashDimension;
         }
         return 1 + r;
+    }
+
+    @ScalarFunction
+    @SqlType(StandardTypes.BIGINT)
+    public static long hashIntoNaive(@SqlType(StandardTypes.VARCHAR) Slice str, @SqlType(StandardTypes.BIGINT) long hashDimension)
+    {
+        return (Math.abs(str.toStringUtf8().hashCode()) % hashDimension) + 1;
     }
 
     @ScalarFunction
