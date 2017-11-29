@@ -42,9 +42,6 @@ import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by lan on 1/19/16.
- */
 public final class AwsFunctions
 {
     private static final AmazonDynamoDBClient DDB_CLIENT;

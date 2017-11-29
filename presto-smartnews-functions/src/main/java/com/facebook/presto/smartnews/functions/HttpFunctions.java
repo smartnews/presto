@@ -42,9 +42,6 @@ import static io.airlift.http.client.StaticBodyGenerator.createStaticBodyGenerat
 import static io.airlift.http.client.StringResponseHandler.createStringResponseHandler;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Created by lan on 1/19/16.
- */
 public final class HttpFunctions
 {
     private static final HttpClient HTTP_CLIENT = new JettyHttpClient(

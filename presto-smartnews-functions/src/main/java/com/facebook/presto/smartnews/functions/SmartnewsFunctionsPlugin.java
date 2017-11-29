@@ -45,6 +45,7 @@ public class SmartnewsFunctionsPlugin
                 .add(AwsFunctions.class)
                 .add(AssertFunctions.class)
                 .add(ExtendedFunctions.class)
+                .add(ExtendedMapFunctions.class)
                 .build();
     }
 }

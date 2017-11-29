@@ -45,30 +45,10 @@ import java.util.concurrent.TimeUnit;
 
 import static com.facebook.presto.spi.StandardErrorCode.INVALID_FUNCTION_ARGUMENT;
 
-/**
- * Created by yuyanglan on 2/1/16.
- */
 public final class ExtendedFunctions
 {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final LoadingCache<String, JsonQuery> JSON_QUERY_CACHE;
-
-    static {
-        JSON_QUERY_CACHE = CacheBuilder.newBuilder()
-                .concurrencyLevel(10)
-                .maximumSize(100)
-                .expireAfterAccess(60, TimeUnit.SECONDS)
-                .build(new CacheLoader<String, JsonQuery>()
-                {
-                    @Override
-                    public JsonQuery load(String jsonQuery)
-                            throws Exception
-                    {
-                        return JsonQuery.compile(jsonQuery);
-                    }
-                });
-    }
-
     private static LoadingCache<Slice, JSONPath> jsonPathCache = CacheBuilder.newBuilder()
             .maximumSize(500)
             .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -81,7 +61,6 @@ public final class ExtendedFunctions
                             return JSONPath.compile(jsonPath.toStringUtf8());
                         }
                     });
-
     private static HashFunction murmur3 = Hashing.murmur3_32(0x9747b28c);
 
     private ExtendedFunctions()
@@ -179,5 +158,21 @@ public final class ExtendedFunctions
             l += hashDimension;
         }
         return l + 1;
+    }
+
+    static {
+        JSON_QUERY_CACHE = CacheBuilder.newBuilder()
+                .concurrencyLevel(10)
+                .maximumSize(100)
+                .expireAfterAccess(60, TimeUnit.SECONDS)
+                .build(new CacheLoader<String, JsonQuery>()
+                {
+                    @Override
+                    public JsonQuery load(String jsonQuery)
+                            throws Exception
+                    {
+                        return JsonQuery.compile(jsonQuery);
+                    }
+                });
     }
 }
