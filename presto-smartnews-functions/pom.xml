@@ -6,7 +6,7 @@
     <parent>
         <artifactId>presto-root</artifactId>
         <groupId>com.facebook.presto</groupId>
-        <version>0.189</version>
+        <version>0.197</version>
     </parent>
 
     <artifactId>presto-smartnews-functions</artifactId>
@@ -83,6 +83,16 @@
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.facebook.presto</groupId>
+            <artifactId>presto-array</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.airlift</groupId>
+            <artifactId>log</artifactId>
         </dependency>
 
         <dependency>

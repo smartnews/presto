@@ -13,8 +13,11 @@
  */
 package com.facebook.presto.smartnews.functions;
 
-import com.facebook.presto.metadata.FunctionFactory;
+import com.facebook.presto.smartnews.event.QueryEventLoggerFactory;
+import com.facebook.presto.smartnews.functions.aggregation.ArbitraryNAggregationFunction;
+import com.facebook.presto.smartnews.functions.aggregation.HyperLogLogMergeAggregation;
 import com.facebook.presto.spi.Plugin;
+import com.facebook.presto.spi.eventlistener.EventListenerFactory;
 import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
 
@@ -41,11 +44,18 @@ public class SmartnewsFunctionsPlugin
         return ImmutableSet.<Class<?>>builder()
                 .add(HyperLogLogMergeAggregation.class)
                 .add(HyperLogLogFunctions.class)
+                .add(ArbitraryNAggregationFunction.class)
                 .add(HttpFunctions.class)
                 .add(AwsFunctions.class)
                 .add(AssertFunctions.class)
                 .add(ExtendedFunctions.class)
                 .add(ExtendedMapFunctions.class)
                 .build();
+    }
+
+    @Override
+    public Iterable<EventListenerFactory> getEventListenerFactories()
+    {
+        return ImmutableSet.of(new QueryEventLoggerFactory());
     }
 }

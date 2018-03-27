@@ -75,9 +75,9 @@ public class KinesisConnectorConfig
      */
     private Duration sleepTime = new Duration(1000, TimeUnit.MILLISECONDS);
 
-    private String accessKey = null;
+    private String accessKey = "";
 
-    private String secretKey = null;
+    private String secretKey = "";
 
     private long dynamoReadCapacity = 50L;
 
@@ -87,7 +87,7 @@ public class KinesisConnectorConfig
 
     private String logicalProcessName = "process1";
 
-    private int iterationNumber = 0;
+    private int iterationNumber;
 
     @NotNull
     public File getTableDescriptionDir()

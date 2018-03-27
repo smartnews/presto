@@ -13,13 +13,12 @@
  */
 package com.facebook.presto.kinesis;
 
-import com.facebook.presto.spi.Connector;
-import com.facebook.presto.spi.ConnectorIndexResolver;
-import com.facebook.presto.spi.ConnectorMetadata;
-import com.facebook.presto.spi.ConnectorPageSourceProvider;
-import com.facebook.presto.spi.ConnectorRecordSetProvider;
-import com.facebook.presto.spi.ConnectorRecordSinkProvider;
-import com.facebook.presto.spi.ConnectorSplitManager;
+import com.facebook.presto.spi.connector.Connector;
+import com.facebook.presto.spi.connector.ConnectorMetadata;
+import com.facebook.presto.spi.connector.ConnectorPageSourceProvider;
+import com.facebook.presto.spi.connector.ConnectorRecordSetProvider;
+import com.facebook.presto.spi.connector.ConnectorSplitManager;
+import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.session.PropertyMetadata;
 import com.google.inject.Inject;
 
@@ -54,9 +53,6 @@ public class KinesisConnector
     }
 
     @Override
-<<<<<<< HEAD
-    public ConnectorMetadata getMetadata()
-=======
     public ConnectorTransactionHandle beginTransaction(IsolationLevel isolationLevel, boolean readOnly)
     {
         checkConnectorSupports(READ_COMMITTED, isolationLevel);
@@ -65,7 +61,6 @@ public class KinesisConnector
 
     @Override
     public ConnectorMetadata getMetadata(ConnectorTransactionHandle transactionHandle)
->>>>>>> fix kinesis connector
     {
         return metadata;
     }
@@ -86,18 +81,6 @@ public class KinesisConnector
     public ConnectorRecordSetProvider getRecordSetProvider()
     {
         return recordSetProvider;
-    }
-
-    @Override
-    public ConnectorRecordSinkProvider getRecordSinkProvider()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ConnectorIndexResolver getIndexResolver()
-    {
-        return null;
     }
 
     @Override
