@@ -449,7 +449,7 @@ public final class JsonFunctions
         return JsonExtract.extract(json, jsonPath.getScalarExtractor());
     }
 
-    @ScalarFunction("json_extract")
+    @ScalarFunction(value = "json_extract", alias = "jj")
     @LiteralParameters("x")
     @SqlNullable
     @SqlType(StandardTypes.JSON)
