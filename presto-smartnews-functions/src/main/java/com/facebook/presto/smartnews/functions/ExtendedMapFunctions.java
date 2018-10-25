@@ -26,6 +26,7 @@ import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 
+@ScalarFunction
 public final class ExtendedMapFunctions
 {
     private final PageBuilder pageBuilder;
@@ -37,7 +38,6 @@ public final class ExtendedMapFunctions
         pageBuilder = new PageBuilder(ImmutableList.of(mapType));
     }
 
-    @ScalarFunction
     @SqlType(MAP_VARCHAR_DOUBLE)
     public Block mapPercentage(@SqlType("map(varchar,bigint)") Block block)
     {
