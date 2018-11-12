@@ -33,6 +33,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import io.airlift.slice.Murmur3Hash32;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import net.thisptr.jackson.jq.JsonQuery;
@@ -147,6 +148,14 @@ public final class ExtendedFunctions
     public static long hashIntoNaive(@SqlType(StandardTypes.VARCHAR) Slice str, @SqlType(StandardTypes.BIGINT) long hashDimension)
     {
         return (Math.abs(str.toStringUtf8().hashCode()) % hashDimension) + 1;
+    }
+
+    @ScalarFunction
+    @SqlType(StandardTypes.BIGINT)
+    public static long rawMhash(@SqlType(StandardTypes.BIGINT) long seed,
+            @SqlType(StandardTypes.VARCHAR) Slice data)
+    {
+        return Murmur3Hash32.hash((int) seed, data, 0, data.length());
     }
 
     @ScalarFunction
