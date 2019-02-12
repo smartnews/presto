@@ -66,7 +66,7 @@ public class ArbitraryAggregationFunction
     private static final MethodHandle BOOLEAN_COMBINE_FUNCTION = methodHandle(ArbitraryAggregationFunction.class, "combine", NullableBooleanState.class, NullableBooleanState.class);
     private static final MethodHandle BLOCK_POSITION_COMBINE_FUNCTION = methodHandle(ArbitraryAggregationFunction.class, "combine", BlockPositionState.class, BlockPositionState.class);
 
-    protected ArbitraryAggregationFunction()
+    public ArbitraryAggregationFunction()
     {
         super(NAME,
                 ImmutableList.of(typeVariable("T")),

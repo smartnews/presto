@@ -240,10 +240,12 @@ import static io.prestosql.operator.aggregation.QuantileDigestAggregationFunctio
 import static io.prestosql.operator.aggregation.QuantileDigestAggregationFunction.QDIGEST_AGG_WITH_WEIGHT_AND_ERROR;
 import static io.prestosql.operator.aggregation.RealAverageAggregation.REAL_AVERAGE_AGGREGATION;
 import static io.prestosql.operator.aggregation.ReduceAggregationFunction.REDUCE_AGG;
+import static io.prestosql.operator.aggregation.histogram.MapHistogram.MAP_HISTOGRAM;
 import static io.prestosql.operator.aggregation.minmaxby.MaxByAggregationFunction.MAX_BY;
 import static io.prestosql.operator.aggregation.minmaxby.MaxByNAggregationFunction.MAX_BY_N_AGGREGATION;
 import static io.prestosql.operator.aggregation.minmaxby.MinByAggregationFunction.MIN_BY;
 import static io.prestosql.operator.aggregation.minmaxby.MinByNAggregationFunction.MIN_BY_N_AGGREGATION;
+import static io.prestosql.operator.aggregation.smartnews.arbitraryn.ArbitraryNAggregationFunction.SMARTNEWS_ARBITRARY_N_AGGREGATION;
 import static io.prestosql.operator.scalar.ArrayConcatFunction.ARRAY_CONCAT_FUNCTION;
 import static io.prestosql.operator.scalar.ArrayConstructor.ARRAY_CONSTRUCTOR;
 import static io.prestosql.operator.scalar.ArrayFlattenFunction.ARRAY_FLATTEN_FUNCTION;
@@ -623,7 +625,6 @@ public class FunctionRegistry
                 .function(DECIMAL_BETWEEN_OPERATOR)
                 .function(DECIMAL_DISTINCT_FROM_OPERATOR)
                 .function(new Histogram(featuresConfig.getHistogramGroupImplementation()))
-                .function(HISTOGRAM)
                 .function(MAP_HISTOGRAM)
                 .function(CHECKSUM_AGGREGATION)
                 .function(IDENTITY_CAST)
@@ -647,7 +648,8 @@ public class FunctionRegistry
                 .aggregate(BuildSetDigestAggregation.class)
                 .scalars(SetDigestFunctions.class)
                 .scalars(SetDigestOperators.class)
-                .scalars(WilsonInterval.class);
+                .scalars(WilsonInterval.class)
+                .function(SMARTNEWS_ARBITRARY_N_AGGREGATION);
 
         switch (featuresConfig.getRegexLibrary()) {
             case JONI:

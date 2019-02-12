@@ -1,0 +1,240 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.prestosql.plugin.kinesis;
+
+import com.google.common.collect.ImmutableSet;
+import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
+import io.prestosql.spi.connector.ColumnMetadata;
+import io.prestosql.spi.type.BigintType;
+import io.prestosql.spi.type.BooleanType;
+import io.prestosql.spi.type.Type;
+import io.prestosql.spi.type.VarcharType;
+
+import java.util.Set;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Objects.requireNonNull;
+
+public class KinesisInternalFieldDescription
+{
+    public static final KinesisInternalFieldDescription SHARD_ID_FIELD = new KinesisInternalFieldDescription("_shard_id", VarcharType.VARCHAR, "Shard Id");
+
+    public static final KinesisInternalFieldDescription SHARD_SEQUENCE_ID_FIELD = new KinesisInternalFieldDescription("_shard_sequence_id", VarcharType.VARCHAR, "sequence id of message within the shard");
+
+    public static final KinesisInternalFieldDescription SEGMENT_START_FIELD = new KinesisInternalFieldDescription("_segment_start", VarcharType.VARCHAR, "Segment start sequence id");
+
+    public static final KinesisInternalFieldDescription SEGMENT_END_FIELD = new KinesisInternalFieldDescription("_segment_end", VarcharType.VARCHAR, "Segment end sequence id");
+
+    public static final KinesisInternalFieldDescription SEGMENT_COUNT_FIELD = new KinesisInternalFieldDescription("_segment_count", BigintType.BIGINT, "Running message count per segment");
+
+    public static final KinesisInternalFieldDescription MESSAGE_VALID_FIELD = new KinesisInternalFieldDescription("_message_valid", BooleanType.BOOLEAN, "Message data is valid");
+
+    public static final KinesisInternalFieldDescription MESSAGE_FIELD = new KinesisInternalFieldDescription("_message", VarcharType.VARCHAR, "Message text");
+
+    public static final KinesisInternalFieldDescription MESSAGE_LENGTH_FIELD = new KinesisInternalFieldDescription("_message_length", BigintType.BIGINT, "Total number of message bytes");
+
+    public static final KinesisInternalFieldDescription PARTITION_KEY_FIELD = new KinesisInternalFieldDescription("_partition_key", VarcharType.VARCHAR, "Key text");
+
+    public static final KinesisInternalFieldDescription CHECKPOINT_ENABLED = new KinesisInternalFieldDescription("_checkpoint_enabled", BooleanType.BOOLEAN, "Is checkpoint enabled");
+
+    public static final KinesisInternalFieldDescription CHECKPOINT_LOGIC_NAME = new KinesisInternalFieldDescription("_checkpoint_logic_name", VarcharType.VARCHAR, "Checkpoint logic name");
+
+    public static final KinesisInternalFieldDescription CHECKPOINT_ITERATION_NUMBER = new KinesisInternalFieldDescription("_checkpoint_iteration_number", BigintType.BIGINT, "Checkpoint iteration num");
+
+    public static Set<KinesisInternalFieldDescription> getInternalFields()
+    {
+        return ImmutableSet.of(SHARD_ID_FIELD, SHARD_SEQUENCE_ID_FIELD,
+                SEGMENT_START_FIELD, SEGMENT_END_FIELD, SEGMENT_COUNT_FIELD,
+                PARTITION_KEY_FIELD, MESSAGE_FIELD, MESSAGE_VALID_FIELD, MESSAGE_LENGTH_FIELD,
+                CHECKPOINT_ENABLED, CHECKPOINT_ITERATION_NUMBER, CHECKPOINT_LOGIC_NAME);
+    }
+
+    private final String name;
+    private final Type type;
+    private final String comment;
+
+    KinesisInternalFieldDescription(
+            String name,
+            Type type,
+            String comment)
+    {
+        checkArgument(!isNullOrEmpty(name), "name is null or is empty");
+        this.name = name;
+        this.type = requireNonNull(type, "type is null");
+        this.comment = requireNonNull(comment, "comment is null");
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public Type getType()
+    {
+        return type;
+    }
+
+    KinesisColumnHandle getColumnHandle(String connectorId, int index, boolean hidden)
+    {
+        return new KinesisColumnHandle(connectorId,
+                index,
+                getName(),
+                getType(),
+                null,
+                null,
+                null,
+                hidden,
+                true);
+    }
+
+    ColumnMetadata getColumnMetadata(boolean hidden)
+    {
+        return new ColumnMetadata(name, type, comment, hidden);
+    }
+
+    public KinesisFieldValueProvider forBooleanValue(boolean value)
+    {
+        return new BooleanKinesisFieldValueProvider(value);
+    }
+
+    public KinesisFieldValueProvider forLongValue(long value)
+    {
+        return new LongKinesisFieldValueProvider(value);
+    }
+
+    public KinesisFieldValueProvider forByteValue(byte[] value)
+    {
+        return new BytesKinesisFieldValueProvider(value);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return java.util.Objects.hash(name, type);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        KinesisInternalFieldDescription other = (KinesisInternalFieldDescription) obj;
+        return java.util.Objects.equals(this.name, other.name) &&
+                java.util.Objects.equals(this.type, other.type);
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(this)
+                .add("name", name)
+                .add("type", type)
+                .toString();
+    }
+
+    public class BooleanKinesisFieldValueProvider
+            extends KinesisFieldValueProvider
+    {
+        private final boolean value;
+
+        private BooleanKinesisFieldValueProvider(boolean value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public boolean accept(KinesisColumnHandle columnHandle)
+        {
+            return columnHandle.getName().equals(name);
+        }
+
+        @Override
+        public boolean getBoolean()
+        {
+            return value;
+        }
+
+        @Override
+        public boolean isNull()
+        {
+            return false;
+        }
+    }
+
+    public class LongKinesisFieldValueProvider
+            extends KinesisFieldValueProvider
+    {
+        private final long value;
+
+        private LongKinesisFieldValueProvider(long value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public boolean accept(KinesisColumnHandle columnHandle)
+        {
+            return columnHandle.getName().equals(name);
+        }
+
+        @Override
+        public long getLong()
+        {
+            return value;
+        }
+
+        @Override
+        public boolean isNull()
+        {
+            return false;
+        }
+    }
+
+    public class BytesKinesisFieldValueProvider
+            extends KinesisFieldValueProvider
+    {
+        private final byte[] value;
+
+        private BytesKinesisFieldValueProvider(byte[] value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public boolean accept(KinesisColumnHandle columnHandle)
+        {
+            return columnHandle.getName().equals(name);
+        }
+
+        @Override
+        public Slice getSlice()
+        {
+            return isNull() ? Slices.EMPTY_SLICE : Slices.wrappedBuffer(value);
+        }
+
+        @Override
+        public boolean isNull()
+        {
+            return value == null || value.length == 0;
+        }
+    }
+}

@@ -55,6 +55,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -533,10 +534,10 @@ public class PrestoResultSet
                 }
                 // work around to fix the display problem in Squirrel SQL
                 // todo : find a better solution
-                if (columnInfo.getColumnTypeName().toLowerCase().startsWith("map")) {
+                if (columnInfo.getColumnTypeName().toLowerCase(Locale.ENGLISH).startsWith("map")) {
                     return getString(columnIndex);
                 }
-                if (columnInfo.getColumnTypeName().toLowerCase().startsWith("row")) {
+                if (columnInfo.getColumnTypeName().toLowerCase(Locale.ENGLISH).startsWith("row")) {
                     return getString(columnIndex);
                 }
         }
