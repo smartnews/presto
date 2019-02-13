@@ -57,7 +57,8 @@ status () {
 
 
 restart () {
-    sudo -u $SERVICE_USER /usr/lib/presto/bin/launcher restart "${CONFIGURATION[@]}"
+    # sudo -u $SERVICE_USER /usr/lib/presto/bin/launcher restart "${CONFIGURATION[@]}"
+    stop && start
     return $?
 }
 
