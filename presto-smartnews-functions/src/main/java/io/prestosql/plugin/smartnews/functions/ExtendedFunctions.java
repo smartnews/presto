@@ -27,12 +27,16 @@ import com.google.common.hash.Hashing;
 import io.airlift.slice.Murmur3Hash32;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+import io.prestosql.operator.scalar.JsonExtract;
+import io.prestosql.operator.scalar.JsonPath;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.function.Description;
+import io.prestosql.spi.function.LiteralParameters;
 import io.prestosql.spi.function.ScalarFunction;
 import io.prestosql.spi.function.SqlNullable;
 import io.prestosql.spi.function.SqlType;
 import io.prestosql.spi.type.StandardTypes;
+import io.prestosql.type.JsonPathType;
 import net.thisptr.jackson.jq.JsonQuery;
 
 import java.io.IOException;
@@ -180,5 +184,31 @@ public final class ExtendedFunctions
                         return JsonQuery.compile(jsonQuery);
                     }
                 });
+    }
+
+    @ScalarFunction(value = "json_extract_scalar", alias = "j")
+    @SqlNullable
+    @LiteralParameters("x")
+    @SqlType("varchar(x)")
+    public static Slice varcharJsonExtractScalar(@SqlType("varchar(x)") Slice json, @SqlType(JsonPathType.NAME) JsonPath jsonPath)
+    {
+        return JsonExtract.extract(json, jsonPath.getScalarExtractor());
+    }
+
+    @ScalarFunction(alias = "j")
+    @SqlNullable
+    @SqlType(StandardTypes.VARCHAR)
+    public static Slice jsonExtractScalar(@SqlType(StandardTypes.JSON) Slice json, @SqlType(JsonPathType.NAME) JsonPath jsonPath)
+    {
+        return JsonExtract.extract(json, jsonPath.getScalarExtractor());
+    }
+
+    @ScalarFunction(value = "json_extract", alias = "jj")
+    @LiteralParameters("x")
+    @SqlNullable
+    @SqlType(StandardTypes.JSON)
+    public static Slice varcharJsonExtract(@SqlType("varchar(x)") Slice json, @SqlType(JsonPathType.NAME) JsonPath jsonPath)
+    {
+        return JsonExtract.extract(json, jsonPath.getObjectExtractor());
     }
 }
