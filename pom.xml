@@ -135,6 +135,7 @@
         <module>presto-server-main</module>
         <module>presto-server-rpm</module>
         <module>presto-session-property-managers</module>
+        <module>presto-smartnews-functions</module>
         <module>presto-spi</module>
         <module>presto-sqlserver</module>
         <module>presto-teradata-functions</module>
@@ -788,6 +789,12 @@
 
             <!-- 3rd party -->
             <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>1.2.47</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>amazon-kinesis-client</artifactId>
                 <version>1.6.3</version>
@@ -1049,6 +1056,12 @@
             </dependency>
 
             <dependency>
+                <groupId>net.agkn</groupId>
+                <artifactId>hll</artifactId>
+                <version>1.6.0</version>
+            </dependency>
+            
+            <dependency>
                 <groupId>net.jodah</groupId>
                 <artifactId>failsafe</artifactId>
                 <version>2.4.0</version>
@@ -1058,6 +1071,12 @@
                 <groupId>net.sf.opencsv</groupId>
                 <artifactId>opencsv</artifactId>
                 <version>2.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.thisptr</groupId>
+                <artifactId>jackson-jq</artifactId>
+                <version>0.0.7</version>
             </dependency>
 
             <dependency>

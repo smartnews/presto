@@ -252,4 +252,9 @@
             <unpack />
         </artifact>
     </artifactSet>
+    <artifactSet to="plugin/smartnews-functions">
+        <artifact id="${project.groupId}:presto-smartnews-functions:zip:${project.version}">
+            <unpack />
+        </artifact>
+    </artifactSet>
 </runtime>
