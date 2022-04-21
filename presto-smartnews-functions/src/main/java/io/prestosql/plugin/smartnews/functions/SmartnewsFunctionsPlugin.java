@@ -48,6 +48,7 @@ public class SmartnewsFunctionsPlugin
                 .add(AssertFunctions.class)
                 .add(ExtendedFunctions.class)
                 .add(ExtendedMapFunctions.class)
+                .add(PseudonymisationFunctions.class)
                 .build();
     }
 

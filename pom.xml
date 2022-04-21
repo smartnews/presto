@@ -1060,7 +1060,7 @@
                 <artifactId>hll</artifactId>
                 <version>1.6.0</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>net.jodah</groupId>
                 <artifactId>failsafe</artifactId>
@@ -1360,7 +1360,26 @@
                                     <exclude>org.codehaus.plexus:plexus-utils</exclude>
                                     <exclude>com.google.guava:guava</exclude>
                                     <exclude>com.fasterxml.jackson.core:jackson-core</exclude>
+                                    <exclude>com.fasterxml.jackson.core:jackson-annotations</exclude>
+                                    <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                                    <exclude>com.fasterxml.jackson.datatype:jackson-datatype-jdk8</exclude>
+                                    <exclude>com.fasterxml.jackson.datatype:jackson-datatype-jsr310</exclude>
+                                    <exclude>com.fasterxml.jackson.module:jackson-module-parameter-names</exclude>
                                     <exclude>com.google.j2objc:j2objc-annotations</exclude>
+                                    <exclude>org.hdrhistogram:HdrHistogram</exclude>
+                                    <exclude>org.checkerframework:checker-qual</exclude>
+                                    <exclude>org.slf4j:slf4j-api</exclude>
+                                    <exclude>org.jetbrains.kotlin:kotlin-stdlib-common</exclude>
+                                    <exclude>org.reactivestreams:reactive-streams</exclude>
+                                    <exclude>io.projectreactor:reactor-core</exclude>
+                                    <exclude>io.netty:netty-codec-http</exclude>
+                                    <exclude>io.netty:netty-codec-http2</exclude>
+                                    <exclude>io.netty:netty-handler</exclude>
+                                    <exclude>io.netty:netty-common</exclude>
+                                    <exclude>io.netty:netty-buffer</exclude>
+                                    <exclude>io.netty:netty-transport</exclude>
+                                    <exclude>io.netty:netty-codec</exclude>
+                                    <exclude>io.netty:netty-transport-native-epoll</exclude>
                                 </excludes>
                             </requireUpperBoundDeps>
                         </rules>
