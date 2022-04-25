@@ -15,7 +15,19 @@
 
     <properties>
         <air.main.basedir>${project.parent.basedir}</air.main.basedir>
+        <air.check.skip-duplicate-finder>true</air.check.skip-duplicate-finder>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>smartnews</id>
+            <url>http://nexus.smartnews.be/nexus/content/repositories/smartnews</url>
+        </repository>
+        <repository>
+            <id>smartnews-snapshots</id>
+            <url>http://nexus.smartnews.be/nexus/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -51,6 +63,24 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartnews</groupId>
+            <artifactId>sn-account-authentication-common</artifactId>
+            <version>0.415.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartnews</groupId>
+            <artifactId>sn-account-id</artifactId>
+            <version>0.415.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartnews</groupId>
+            <artifactId>sn-pseudonymisation-lib</artifactId>
+            <version>0.6.0</version>
         </dependency>
 
         <dependency>
