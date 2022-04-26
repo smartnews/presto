@@ -35,13 +35,16 @@ public final class PseudonymisationFunctions
     private static PseudonymisationService pseudonymisationService;
     private static AccountIdConverter accountIdConverter;
 
+    static {
+        pseudonymisationService = new PseudonymisationService();
+        accountIdConverter = new AccountIdConverter(new Base62UUIDGenerator(new FasterXMLUUIDGenerator()), 10);
+    }
+
     @Description("Convert device_token into virtual_id")
     @ScalarFunction("to_virtual_id")
     @SqlType(StandardTypes.VARCHAR)
     public static Slice to_virtual_id(@SqlType(StandardTypes.VARCHAR) Slice slice) throws SQLException
     {
-        pseudonymisationService = new PseudonymisationService();
-
         String argument = slice.toStringUtf8();
         return Slices.utf8Slice(pseudonymisationService.pseudonymise(argument.toString()));
     }
@@ -51,8 +54,6 @@ public final class PseudonymisationFunctions
     @SqlType(StandardTypes.VARCHAR)
     public static Slice to_account_id(@SqlType(StandardTypes.VARCHAR) Slice slice) throws SQLException
     {
-        accountIdConverter = new AccountIdConverter(new Base62UUIDGenerator(new FasterXMLUUIDGenerator()), 10);
-
         String argument = slice.toStringUtf8();
         return Slices.utf8Slice(accountIdConverter.getBackfilledAccountIdFromVirtualId(argument.toString()));
     }
