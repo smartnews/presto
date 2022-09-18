@@ -38,6 +38,7 @@ import io.trino.dispatcher.DispatchQueryFactory;
 import io.trino.dispatcher.FailedDispatchQueryFactory;
 import io.trino.dispatcher.LocalDispatchQueryFactory;
 import io.trino.dispatcher.QueuedStatementResource;
+import io.trino.dispatcher.Visualizer;
 import io.trino.event.QueryMonitor;
 import io.trino.event.QueryMonitorConfig;
 import io.trino.execution.ClusterSizeMonitor;
@@ -146,6 +147,7 @@ public class CoordinatorModule
         // statement resource
         jsonCodecBinder(binder).bindJsonCodec(TaskInfo.class);
         jaxrsBinder(binder).bind(QueuedStatementResource.class);
+        jaxrsBinder(binder).bind(Visualizer.class);
         jaxrsBinder(binder).bind(ExecutingStatementResource.class);
         binder.bind(StatementHttpExecutionMBean.class).in(Scopes.SINGLETON);
         newExporter(binder).export(StatementHttpExecutionMBean.class).withGeneratedName();
