@@ -14,6 +14,7 @@
 package io.trino.operator.scalar.timestamp;
 
 import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.function.Description;
@@ -23,6 +24,7 @@ import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlType;
 import io.trino.spi.type.LongTimestamp;
 import io.trino.spi.type.StandardTypes;
+import io.trino.util.DateTimeUtils;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.format.DateTimeFormat;
 
@@ -35,6 +37,8 @@ import static io.trino.type.DateTimes.scaleEpochMicrosToMillis;
 @ScalarFunction("format_datetime")
 public class FormatDateTime
 {
+    public static final Slice yyyyMMdd = Slices.utf8Slice("yyyy-MM-dd");
+
     private FormatDateTime() {}
 
     @LiteralParameters({"x", "p"})
@@ -43,6 +47,13 @@ public class FormatDateTime
     {
         // TODO: currently, date formatting only supports up to millis, so we round to that unit
         timestamp = scaleEpochMicrosToMillis(round(timestamp, 3));
+
+        if (yyyyMMdd.equals(formatString)) {
+            Slice dt = DateTimeUtils.KNOWN_DATES_L2S.get(timestamp - timestamp % DateTimeUtils.MILLIS_PER_DAY);
+            if (dt != null) {
+                return dt;
+            }
+        }
 
         if (datetimeFormatSpecifiesZone(formatString)) {
             // Timezone is unknown for TIMESTAMP w/o TZ so it cannot be printed out.

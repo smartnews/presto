@@ -13,6 +13,8 @@
  */
 package io.trino.util;
 
+import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
 import io.trino.client.IntervalDayTime;
 import io.trino.client.IntervalYearMonth;
 import io.trino.spi.TrinoException;
@@ -36,8 +38,10 @@ import org.joda.time.format.PeriodFormatterBuilder;
 import org.joda.time.format.PeriodParser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -55,9 +59,42 @@ import static java.lang.String.format;
 
 public final class DateTimeUtils
 {
+    // store the common date in string, and its int value timestamp
+    // to save the parseDate function call
+    // example:
+    //      key=1970-01-01, value=0
+    //      key=1970-01-02, value=1
+    public static final Map<Slice, Integer> KNOWN_DATES_S2I = new HashMap<>();
+    // milliseconds to string date
+    public static final Map<Long, Slice> KNOWN_DATES_L2S = new HashMap<>();
+    public static final long MILLIS_PER_DAY = 24 * 3600 * 1000;
+
     private DateTimeUtils() {}
 
     private static final DateTimeFormatter DATE_FORMATTER = ISODateTimeFormat.date().withZoneUTC();
+
+    static {
+        // left store the last 20 years and future 1 years date in the map
+        long todayMs = System.currentTimeMillis();
+        todayMs -= todayMs % MILLIS_PER_DAY;    // start of date
+
+        // store past 20 years date
+        for (int i = 0; i < 20 * 365; i++) {
+            long dtMs = todayMs - i * MILLIS_PER_DAY;
+            Slice dt = Slices.utf8Slice(DATE_FORMATTER.print(dtMs));
+            KNOWN_DATES_S2I.put(dt, toIntExact(TimeUnit.MILLISECONDS.toDays(dtMs)));
+            KNOWN_DATES_L2S.put(dtMs, dt);
+        }
+
+        // store the next 3 years, so if the trino cluster
+        // is up and running for 3 years, it still covers the current date
+        for (int i = 1; i < 3 * 365; i++) {
+            long dtMs = todayMs + i * MILLIS_PER_DAY;
+            Slice dt = Slices.utf8Slice(DATE_FORMATTER.print(dtMs));
+            KNOWN_DATES_S2I.put(dt, toIntExact(TimeUnit.MILLISECONDS.toDays(dtMs)));
+            KNOWN_DATES_L2S.put(dtMs, dt);
+        }
+    }
 
     public static int parseDate(String value)
     {

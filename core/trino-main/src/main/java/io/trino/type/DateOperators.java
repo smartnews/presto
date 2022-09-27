@@ -21,6 +21,7 @@ import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.ScalarOperator;
 import io.trino.spi.function.SqlType;
 import io.trino.spi.type.StandardTypes;
+import io.trino.util.DateTimeUtils;
 
 import static io.airlift.slice.SliceUtf8.trim;
 import static io.airlift.slice.Slices.utf8Slice;
@@ -39,6 +40,12 @@ public final class DateOperators
     @SqlType("varchar(x)")
     public static Slice castToSlice(@LiteralParameter("x") long x, @SqlType(StandardTypes.DATE) long value)
     {
+        int days = (int) value;
+        Slice dt = DateTimeUtils.KNOWN_DATES_L2S.get(days * DateTimeUtils.MILLIS_PER_DAY);
+        if (dt != null) {
+            return dt;
+        }
+
         String stringValue = printDate((int) value);
         // String is all-ASCII, so String.length() here returns actual code points count
         if (stringValue.length() <= x) {
@@ -55,6 +62,12 @@ public final class DateOperators
     public static long castFromSlice(@SqlType("varchar(x)") Slice value)
     {
         try {
+            Slice trimmed = trim(value);
+            Integer days = DateTimeUtils.KNOWN_DATES_S2I.get(trimmed);
+            if (days != null) {
+                return days;
+            }
+
             return parseDate(trim(value).toStringUtf8());
         }
         catch (IllegalArgumentException | ArithmeticException e) {

@@ -16,6 +16,7 @@ package io.trino.operator.scalar;
 import io.airlift.concurrent.ThreadLocalCache;
 import io.airlift.slice.Slice;
 import io.airlift.units.Duration;
+import io.trino.operator.scalar.timestamp.DateFormat;
 import io.trino.operator.scalar.timestamptz.CurrentTimestamp;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ConnectorSession;
@@ -29,6 +30,7 @@ import io.trino.spi.type.LongTimestampWithTimeZone;
 import io.trino.spi.type.StandardTypes;
 import io.trino.spi.type.TimeZoneKey;
 import io.trino.type.DateTimes;
+import io.trino.util.DateTimeUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeField;
 import org.joda.time.DateTimeZone;
@@ -371,6 +373,12 @@ public final class DateTimeFunctions
     @SqlType("timestamp(3)") // TODO: increase precision?
     public static long dateParse(ConnectorSession session, @SqlType("varchar(x)") Slice dateTime, @SqlType("varchar(y)") Slice formatString)
     {
+        if (DateFormat.YmD.equals(formatString)) {
+            Integer days = DateTimeUtils.KNOWN_DATES_S2I.get(dateTime);
+            if (days != null) {
+                return scaleEpochMillisToMicros(days * DateTimeUtils.MILLIS_PER_DAY);
+            }
+        }
         DateTimeFormatter formatter = DATETIME_FORMATTER_CACHE.get(formatString)
                 .withZoneUTC()
                 .withLocale(session.getLocale());

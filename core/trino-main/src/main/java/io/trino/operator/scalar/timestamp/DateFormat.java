@@ -14,6 +14,7 @@
 package io.trino.operator.scalar.timestamp;
 
 import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
 import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.function.Description;
 import io.trino.spi.function.LiteralParameter;
@@ -22,6 +23,7 @@ import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlType;
 import io.trino.spi.type.LongTimestamp;
 import io.trino.spi.type.StandardTypes;
+import io.trino.util.DateTimeUtils;
 import org.joda.time.chrono.ISOChronology;
 
 import static io.trino.operator.scalar.DateTimeFunctions.dateFormat;
@@ -31,6 +33,8 @@ import static io.trino.type.DateTimes.epochMicrosToMillisWithRounding;
 @Description("Formats the given timestamp by the given format")
 public class DateFormat
 {
+    public static final Slice YmD = Slices.utf8Slice("%Y-%m-%d");
+
     private DateFormat() {}
 
     @LiteralParameters({"x", "p"})
@@ -40,6 +44,13 @@ public class DateFormat
         // TODO: currently, date formatting only supports up to millis, so round to that unit
         timestamp = epochMicrosToMillisWithRounding(timestamp);
 
+        // if formatString in ('%Y-%m-%d), then try to get the result from cache
+        if (YmD.equals(formatString)) {
+            Slice dt = DateTimeUtils.KNOWN_DATES_L2S.get(timestamp - timestamp % DateTimeUtils.MILLIS_PER_DAY);
+            if (dt != null) {
+                return dt;
+            }
+        }
         return dateFormat(ISOChronology.getInstanceUTC(), session.getLocale(), timestamp, formatString);
     }
 
