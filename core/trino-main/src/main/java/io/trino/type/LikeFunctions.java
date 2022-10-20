@@ -170,6 +170,49 @@ public final class LikeFunctions
         return output.slice();
     }
 
+    /**
+     * unescape pattern, and remove % and _ from the pattern
+     * @param pattern the pattern, e.g. '%abc_def%'
+     * @param escape the escape char if any
+     * @param patternChars returns the pattern chars and their positions
+     * @return cleaned pattern, e.g. 'abcdef'
+     */
+    public static Slice unescapeAndCleanLiteralLikePattern(Slice pattern, Optional<Slice> escape, int[] patternChars)
+    {
+        int escapeChar = getEscapeCharacter(escape)
+                .map(c -> (int) c)
+                .orElse(-1);
+
+        @SuppressWarnings("resource")
+        DynamicSliceOutput output = new DynamicSliceOutput(pattern.length());
+        boolean escaped = false;
+        int position = 0;
+        while (position < pattern.length()) {
+            int currentChar = getCodePointAt(pattern, position);
+            int lengthOfCodePoint = lengthOfCodePoint(currentChar);
+            if (!escaped && (currentChar == escapeChar)) {
+                escaped = true;
+            }
+            else {
+                if (escaped) {
+                    output.writeBytes(pattern, position, lengthOfCodePoint);
+                    escaped = false;
+                }
+                else {
+                    if (currentChar == '%' || currentChar == '_') {
+                        patternChars[position] = currentChar;
+                    }
+                    else {
+                        output.writeBytes(pattern, position, lengthOfCodePoint);
+                    }
+                }
+            }
+            position += lengthOfCodePoint;
+        }
+        checkEscape(!escaped);
+        return output.slice();
+    }
+
     private static Optional<Character> getEscapeCharacter(Optional<Slice> escape)
     {
         if (escape.isEmpty()) {

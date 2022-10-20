@@ -43,7 +43,12 @@ public final class DateOperators
         int days = (int) value;
         Slice dt = DateTimeUtils.KNOWN_DATES_L2S.get(days * DateTimeUtils.MILLIS_PER_DAY);
         if (dt != null) {
-            return dt;
+            if (dt.length() <= x) {
+                return dt;
+            }
+            else {
+                throw new TrinoException(INVALID_CAST_ARGUMENT, format("Value %s cannot be represented as varchar(%s)", dt.toStringUtf8(), x));
+            }
         }
 
         String stringValue = printDate((int) value);

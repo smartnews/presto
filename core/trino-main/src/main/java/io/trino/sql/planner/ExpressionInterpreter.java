@@ -1182,6 +1182,72 @@ public class ExpressionInterpreter
                 return new ComparisonExpression(ComparisonExpression.Operator.EQUAL, valueExpression, patternExpression);
             }
 
+            // added by SmartNews. if pattern is a simple pattern, which contains only leading or tailing %,
+            // replace with starts_with or ends_with, or contains
+            if (pattern instanceof Slice && (escape == null || escape instanceof Slice)) {
+                Optional<Slice> optionalSlice = escape == null ? Optional.empty() : Optional.of((Slice) escape);
+                Slice slicePattern = (Slice) pattern;
+                int[] specialChars = new int[slicePattern.length()];
+                Slice cleanedPattern = LikeFunctions.unescapeAndCleanLiteralLikePattern(slicePattern, optionalSlice, specialChars);
+                // check whether it is simple pattern or not
+                boolean leadingWildchar = false;
+                boolean tailingWildchar = false;
+                boolean isSimplePattern = true;
+                for (int i = 0; i < specialChars.length; i++) {
+                    if (specialChars[i] == '_') {
+                        isSimplePattern = false;
+                        break;
+                    }
+                    if (specialChars[i] == '%') {
+                        if (i == 0) {
+                            leadingWildchar = true;
+                        }
+                        else if (i == specialChars.length - 1) {
+                            tailingWildchar = true;
+                        }
+                        else {
+                            // % in the middle of the pattern
+                            isSimplePattern = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (isSimplePattern) {
+                    Type valueType = type(node.getValue());
+                    VarcharType patternType = createVarcharType(countCodePoints(cleanedPattern));
+                    Expression valueExpression;
+                    if (valueType instanceof CharType) {
+                        valueExpression = toExpression(value, valueType);
+                        valueType = VarcharType.createVarcharType(((CharType) valueType).getLength());
+                        valueExpression = new Cast(valueExpression, toSqlType(valueType), false);
+                    }
+                    else if (valueType instanceof VarcharType) {
+                        valueExpression = toExpression(value, valueType);
+                    }
+                    else {
+                        throw new IllegalStateException("Unsupported valueType for LIKE: " + valueType);
+                    }
+
+                    FunctionCallBuilder builder = FunctionCallBuilder.resolve(session, metadata)
+                            .addArgument(valueType, valueExpression)
+                            .addArgument(patternType, new StringLiteral(cleanedPattern.toStringUtf8()));
+
+                    if (cleanedPattern.length() <= 0 || (leadingWildchar && tailingWildchar)) {
+                        // => string.contains
+                        return builder.setName(QualifiedName.of("CONTAINS")).build();
+                    }
+                    else if (leadingWildchar) {
+                        // => ends_with
+                        return builder.setName(QualifiedName.of("ENDS_WITH")).build();
+                    }
+                    else if (tailingWildchar) {
+                        // => starts_with
+                        return builder.setName(QualifiedName.of("STARTS_WITH")).build();
+                    }
+                }
+            }
+
             Optional<Expression> optimizedEscape = Optional.empty();
             if (node.getEscape().isPresent()) {
                 optimizedEscape = Optional.of(toExpression(escape, type(node.getEscape().get())));

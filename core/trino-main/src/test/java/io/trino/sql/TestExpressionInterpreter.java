@@ -1643,6 +1643,19 @@ public class TestExpressionInterpreter
     }
 
     @Test
+    public void testSimpleLikeOptimization()
+    {
+        // simple like pattern optimization
+        assertOptimizedEquals("unbound_char LIKE 'aa%'", "starts_with(CAST(unbound_char AS varchar(17)), 'aa')");
+        assertOptimizedEquals("unbound_char LIKE '%aa'", "ends_with(CAST(unbound_char AS varchar(17)), 'aa')");
+        assertOptimizedEquals("unbound_char LIKE '%aa%'", "contains(CAST(unbound_char AS varchar(17)), 'aa')");
+        assertOptimizedEquals("unbound_char LIKE '%%'", "contains(CAST(unbound_char AS varchar(17)), '')");
+        assertOptimizedEquals("unbound_char LIKE '%'", "contains(CAST(unbound_char AS varchar(17)), '')");
+        assertOptimizedEquals("unbound_char LIKE '%X%abX_c' escape 'X'", "ends_with(CAST(unbound_char AS varchar(17)), '%ab_c')");
+        assertOptimizedEquals("unbound_char LIKE U&'%\\306E\\30EF\\30AF\\30C1'", "ends_with(CAST(unbound_char AS varchar(17)), U&'\\306E\\30EF\\30AF\\30C1')");
+    }
+
+    @Test
     public void testLikeCharOptimization()
     {
         // constant literal pattern of length shorter than value length

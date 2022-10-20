@@ -72,7 +72,7 @@ public class GracefulShutdownHandler
 
     public synchronized void requestShutdown()
     {
-        log.info("Shutdown requested");
+        log.info("Shutdown requested, with grace period %d ms", gracePeriod.toMillis());
 
         if (isCoordinator) {
             throw new UnsupportedOperationException("Cannot shutdown coordinator");
@@ -84,13 +84,14 @@ public class GracefulShutdownHandler
         shutdownRequested = true;
 
         // wait for a grace period (so that shutting down state is observed by the coordinator) to start the shutdown sequence
+        log.info("schedule shutdown");
         shutdownHandler.schedule(this::shutdown, gracePeriod.toMillis(), MILLISECONDS);
     }
 
     private void shutdown()
     {
         List<TaskInfo> activeTasks = getActiveTasks();
-
+        log.info("Shutdown %d active tasks", activeTasks.size());
         // At this point no new tasks should be scheduled by coordinator on this worker node.
         // Wait for all remaining tasks to finish.
         while (activeTasks.size() > 0) {
@@ -117,9 +118,10 @@ public class GracefulShutdownHandler
             activeTasks = getActiveTasks();
         }
 
+        log.info("sleepUninterruptibly for %d milliseconds", gracePeriod.toMillis());
         // wait for another grace period for all task states to be observed by the coordinator
         sleepUninterruptibly(gracePeriod.toMillis(), MILLISECONDS);
-
+        log.info("done sleepUninterruptibly");
         Future<?> shutdownFuture = lifeCycleStopper.submit(() -> {
             lifeCycleManager.stop();
             return null;
@@ -140,6 +142,7 @@ public class GracefulShutdownHandler
             log.warn(e, "Problem stopping the life cycle");
         }
 
+        log.info("shutdownAction.onShutdown()");
         shutdownAction.onShutdown();
     }
 
