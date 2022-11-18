@@ -11,22 +11,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.password.file;
+package io.trino.plugin.base.ldap;
 
-import io.trino.spi.TrinoException;
+import com.google.inject.Binder;
+import com.google.inject.Module;
+import com.google.inject.Scopes;
 
-import static io.trino.spi.StandardErrorCode.CONFIGURATION_INVALID;
+import static io.airlift.configuration.ConfigBinder.configBinder;
 
-public class HashedPasswordException
-        extends TrinoException
+public class LdapClientModule
+        implements Module
 {
-    public HashedPasswordException(String message)
+    @Override
+    public void configure(Binder binder)
     {
-        this(message, null);
-    }
-
-    public HashedPasswordException(String message, Throwable cause)
-    {
-        super(CONFIGURATION_INVALID, message, cause);
+        configBinder(binder).bindConfig(LdapClientConfig.class);
+        binder.bind(LdapClient.class).to(JdkLdapClient.class).in(Scopes.SINGLETON);
     }
 }

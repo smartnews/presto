@@ -14,6 +14,9 @@
 package io.trino.plugin.password.ldap;
 
 import com.google.common.io.Closer;
+import io.trino.plugin.base.ldap.JdkLdapClient;
+import io.trino.plugin.base.ldap.LdapClientConfig;
+import io.trino.plugin.base.ldap.LdapUtil;
 import io.trino.plugin.password.ldap.TestingOpenLdapServer.DisposableSubContext;
 import io.trino.spi.security.AccessDeniedException;
 import io.trino.spi.security.BasicPrincipal;
@@ -23,7 +26,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.testng.Assert.assertEquals;
 
@@ -45,8 +47,9 @@ public class TestLdapAuthenticator
         closer.register(openLdapServer);
         openLdapServer.start();
 
-        client = new JdkLdapAuthenticatorClient(new LdapConfig()
-                .setLdapUrl(openLdapServer.getLdapUrl()));
+        client = new LdapAuthenticatorClient(
+                new JdkLdapClient(new LdapClientConfig()
+                        .setLdapUrl(openLdapServer.getLdapUrl())));
     }
 
     @AfterClass(alwaysRun = true)
@@ -64,8 +67,9 @@ public class TestLdapAuthenticator
                 DisposableSubContext ignored = openLdapServer.createUser(organization, "alice", "alice-pass")) {
             LdapAuthenticator ldapAuthenticator = new LdapAuthenticator(
                     client,
-                    new LdapConfig()
-                            .setUserBindSearchPatterns("uid=${USER}," + organization.getDistinguishedName()));
+                    new LdapAuthenticatorConfig()
+                            .setUserBindSearchPatterns("uid=${USER}," + organization.getDistinguishedName()),
+                    new LdapUtil());
 
             assertThatThrownBy(() -> ldapAuthenticator.createAuthenticatedPrincipal("alice", "invalid"))
                     .isInstanceOf(AccessDeniedException.class)
@@ -88,8 +92,9 @@ public class TestLdapAuthenticator
                 DisposableSubContext ignored2 = openLdapServer.createUser(alternativeOrganization, "alice", "alt-alice-pass")) {
             LdapAuthenticator ldapAuthenticator = new LdapAuthenticator(
                     client,
-                    new LdapConfig()
-                            .setUserBindSearchPatterns(format("uid=${USER},%s:uid=${USER},%s", organization.getDistinguishedName(), alternativeOrganization.getDistinguishedName())));
+                    new LdapAuthenticatorConfig()
+                            .setUserBindSearchPatterns(format("uid=${USER},%s:uid=${USER},%s", organization.getDistinguishedName(), alternativeOrganization.getDistinguishedName())),
+                    new LdapUtil());
 
             assertEquals(ldapAuthenticator.createAuthenticatedPrincipal("alice", "alice-pass"), new BasicPrincipal("alice"));
             ldapAuthenticator.invalidateCache();
@@ -114,10 +119,11 @@ public class TestLdapAuthenticator
                 DisposableSubContext ignored = openLdapServer.createUser(organization, "bob", "bob-pass")) {
             LdapAuthenticator ldapAuthenticator = new LdapAuthenticator(
                     client,
-                    new LdapConfig()
+                    new LdapAuthenticatorConfig()
                             .setUserBindSearchPatterns("uid=${USER}," + organization.getDistinguishedName())
                             .setUserBaseDistinguishedName(organization.getDistinguishedName())
-                            .setGroupAuthorizationSearchPattern(format("(&(objectClass=groupOfNames)(cn=group_*)(member=uid=${USER},%s))", organization.getDistinguishedName())));
+                            .setGroupAuthorizationSearchPattern(format("(&(objectClass=groupOfNames)(cn=group_*)(member=uid=${USER},%s))", organization.getDistinguishedName())),
+                    new LdapUtil());
 
             assertThatThrownBy(() -> ldapAuthenticator.createAuthenticatedPrincipal("alice", "invalid"))
                     .isInstanceOf(AccessDeniedException.class)
@@ -143,11 +149,12 @@ public class TestLdapAuthenticator
         try (DisposableSubContext organization = openLdapServer.createOrganization()) {
             LdapAuthenticator ldapAuthenticator = new LdapAuthenticator(
                     client,
-                    new LdapConfig()
+                    new LdapAuthenticatorConfig()
                             .setUserBaseDistinguishedName(organization.getDistinguishedName())
                             .setGroupAuthorizationSearchPattern("(&(objectClass=inetOrgPerson))")
                             .setBindDistingushedName("cn=admin,dc=trino,dc=testldap,dc=com")
-                            .setBindPassword("invalid-password"));
+                            .setBindPassword("invalid-password"),
+                    new LdapUtil());
 
             assertThatThrownBy(() -> ldapAuthenticator.createAuthenticatedPrincipal("alice", "alice-pass"))
                     .isInstanceOf(AccessDeniedException.class)
@@ -165,11 +172,12 @@ public class TestLdapAuthenticator
                 DisposableSubContext bob = openLdapServer.createUser(organization, "bob", "bob-pass")) {
             LdapAuthenticator ldapAuthenticator = new LdapAuthenticator(
                     client,
-                    new LdapConfig()
+                    new LdapAuthenticatorConfig()
                             .setUserBaseDistinguishedName(organization.getDistinguishedName())
                             .setGroupAuthorizationSearchPattern(format("(&(objectClass=inetOrgPerson)(memberof=%s))", group.getDistinguishedName()))
                             .setBindDistingushedName("cn=admin,dc=trino,dc=testldap,dc=com")
-                            .setBindPassword("admin"));
+                            .setBindPassword("admin"),
+                    new LdapUtil());
 
             assertThatThrownBy(() -> ldapAuthenticator.createAuthenticatedPrincipal("unknown_user", "invalid"))
                     .isInstanceOf(AccessDeniedException.class)
@@ -206,37 +214,5 @@ public class TestLdapAuthenticator
                     .hasMessageMatching("Access Denied: Multiple group membership results for user \\[alice].*");
             ldapAuthenticator.invalidateCache();
         }
-    }
-
-    @Test
-    public void testContainsSpecialCharacters()
-    {
-        assertThat(LdapAuthenticator.containsSpecialCharacters("The quick brown fox jumped over the lazy dogs"))
-                .as("English pangram")
-                .isEqualTo(false);
-        assertThat(LdapAuthenticator.containsSpecialCharacters("Pchnąć w tę łódź jeża lub ośm skrzyń fig"))
-                .as("Perfect polish pangram")
-                .isEqualTo(false);
-        assertThat(LdapAuthenticator.containsSpecialCharacters("いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）"))
-                .as("Japanese hiragana pangram - Iroha")
-                .isEqualTo(false);
-        assertThat(LdapAuthenticator.containsSpecialCharacters("*"))
-                .as("LDAP wildcard")
-                .isEqualTo(true);
-        assertThat(LdapAuthenticator.containsSpecialCharacters("   John Doe"))
-                .as("Beginning with whitespace")
-                .isEqualTo(true);
-        assertThat(LdapAuthenticator.containsSpecialCharacters("John Doe  \r"))
-                .as("Ending with whitespace")
-                .isEqualTo(true);
-        assertThat(LdapAuthenticator.containsSpecialCharacters("Hi (This) = is * a \\ test # ç à ô"))
-                .as("Multiple special characters")
-                .isEqualTo(true);
-        assertThat(LdapAuthenticator.containsSpecialCharacters("John\u0000Doe"))
-                .as("NULL character")
-                .isEqualTo(true);
-        assertThat(LdapAuthenticator.containsSpecialCharacters("John Doe <john.doe@company.com>"))
-                .as("Angle brackets")
-                .isEqualTo(true);
     }
 }
