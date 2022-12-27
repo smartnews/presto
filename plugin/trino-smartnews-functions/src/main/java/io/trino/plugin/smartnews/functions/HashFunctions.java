@@ -27,11 +27,11 @@ import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class SmartnewsHash
+public final class HashFunctions
 {
     private static final String HASH_KEY = Optional.ofNullable(System.getenv("SN_HASH_KEY")).orElse("smartnews");
 
-    private SmartnewsHash()
+    private HashFunctions()
     {
     }
 

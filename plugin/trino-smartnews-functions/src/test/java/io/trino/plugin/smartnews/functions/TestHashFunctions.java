@@ -27,7 +27,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotSame;
 import static org.testng.Assert.assertNull;
 
-public class TestSmartnewsHash
+public class TestHashFunctions
 {
     private LocalQueryRunner runner;
 
@@ -40,7 +40,7 @@ public class TestSmartnewsHash
             public Set<Class<?>> getFunctions()
             {
                 return ImmutableSet.<Class<?>>builder()
-                        .add(SmartnewsHash.class)
+                        .add(HashFunctions.class)
                         .build();
             }
         });
