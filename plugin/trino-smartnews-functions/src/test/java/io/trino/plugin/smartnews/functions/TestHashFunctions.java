@@ -46,6 +46,7 @@ public class TestHashFunctions
                         .build();
             }
         });
+        HashFunctions.setSnHashKey("test_sn_hash_key");
     }
 
     @AfterClass(alwaysRun = true)
@@ -63,6 +64,7 @@ public class TestHashFunctions
         Session session = TestingSession.testSessionBuilder().build();
         assertNull(runner.execute("select sn_hash(NULL)").getOnlyValue());
         assertEquals(runner.execute(session, "select sn_hash('123')").getOnlyValue(), runner.execute(session, "select sn_hash('123')").getOnlyValue());
+        assertEquals(runner.execute(session, "select sn_hash('測試')").getOnlyValue(), runner.execute(session, "select sn_hash('測試')").getOnlyValue());
         assertEquals(runner.execute(session, "select sn_hash(123)").getOnlyValue(), runner.execute(session, "select sn_hash(123)").getOnlyValue());
         assertEquals(runner.execute(session, "select sn_hash(0.123)").getOnlyValue(), runner.execute(session, "select sn_hash(0.123)").getOnlyValue());
         assertEquals(runner.execute(session, "select sn_hash('abc')").getOnlyValue(), runner.execute(session, "select sn_hash('abc')").getOnlyValue());
@@ -72,11 +74,28 @@ public class TestHashFunctions
     }
 
     @Test
-    public void testDynamics() throws Exception
+    public void testDynamicHashing() throws Exception
     {
-        String prevRes = runner.execute("select sn_hash('123')").getOnlyValue().toString();
+        Session session = TestingSession.testSessionBuilder().build();
+        String prevRes = runner.execute(session, "select sn_hash('123')").getOnlyValue().toString();
         init();
-        assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), prevRes);
+        assertNotSame(runner.execute(session, "select sn_hash('123')").getOnlyValue(), prevRes);
+    }
+
+    @Test
+    public void testHashingUTF8() throws Exception
+    {
+        String prevRes = runner.execute("select sn_hash('測試')").getOnlyValue().toString();
+        System.out.println(prevRes);
+        init();
+        assertNotSame(runner.execute("select sn_hash('測試')").getOnlyValue(), prevRes);
+    }
+
+    @Test
+    public void testHashingPrefixAndLength() throws Exception
+    {
+        assertEquals(runner.execute("select sn_hash('測試')").getOnlyValue().toString().substring(0, 2), HashFunctions.SN_HASH_PREFIX);
+        assertEquals(runner.execute("select sn_hash('測試')").getOnlyValue().toString().length(), HashFunctions.SN_HASH_LENGTH);
     }
 
     @Test
