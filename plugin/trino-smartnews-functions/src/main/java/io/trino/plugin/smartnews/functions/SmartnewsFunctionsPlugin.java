@@ -49,6 +49,7 @@ public class SmartnewsFunctionsPlugin
                 .add(ExtendedFunctions.class)
                 .add(ExtendedMapFunctions.class)
                 .add(PseudonymisationFunctions.class)
+                .add(SmartnewsHash.class)
                 .build();
     }
 
