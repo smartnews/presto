@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>trino-root</artifactId>
+        <groupId>io.trino</groupId>
+        <version>407</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>trino-smartnews-functions</artifactId>
+    <description>Smartnews' functions for trino</description>
+    <packaging>trino-plugin</packaging>
+
+    <properties>
+        <air.main.basedir>${project.parent.basedir}</air.main.basedir>
+        <air.check.skip-duplicate-finder>true</air.check.skip-duplicate-finder>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>smartnews</id>
+            <url>http://nexus.smartnews.be/nexus/content/repositories/smartnews</url>
+        </repository>
+        <repository>
+            <id>smartnews-snapshots</id>
+            <url>http://nexus.smartnews.be/nexus/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-collect</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.airlift</groupId>
+            <artifactId>http-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.airlift</groupId>
+            <artifactId>log</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.47</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.glassfish.jersey.core</groupId>
+                    <artifactId>jersey-common</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-dynamodb</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartnews</groupId>
+            <artifactId>sn-account-authentication-common</artifactId>
+            <version>0.415.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-to-slf4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlinx</groupId>
+                    <artifactId>kotlinx-coroutines-reactive</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlinx</groupId>
+                    <artifactId>kotlinx-coroutines-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartnews</groupId>
+            <artifactId>sn-account-id</artifactId>
+            <version>0.415.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-to-slf4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-webflux</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-actuator</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.logstash.logback</groupId>
+                    <artifactId>logstash-logback-encoder</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlinx</groupId>
+                    <artifactId>kotlinx-coroutines-reactive</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartnews</groupId>
+            <artifactId>sn-pseudonymisation-lib</artifactId>
+            <version>0.6.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.agkn</groupId>
+            <artifactId>hll</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.thisptr</groupId>
+            <artifactId>jackson-jq</artifactId>
+            <version>0.0.7</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jruby.jcodings</groupId>
+                    <artifactId>jcodings</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-spi</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.airlift</groupId>
+            <artifactId>slice</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjdk.jol</groupId>
+            <artifactId>jol-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- for testing -->
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-main</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-main</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-tests</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

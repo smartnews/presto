@@ -140,6 +140,12 @@
         </artifact>
     </artifactSet>
 
+    <artifactSet to="plugin/smartnews-functions">
+        <artifact id="${project.groupId}:trino-smartnews-functions:zip:${project.version}">
+        <unpack />
+        </artifact>
+    </artifactSet>
+
     <artifactSet to="plugin/mysql">
         <artifact id="${project.groupId}:trino-mysql:zip:${project.version}">
             <unpack />

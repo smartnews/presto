@@ -1,0 +1,78 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.trino.plugin.smartnews.functions;
+
+import com.google.common.collect.ImmutableSet;
+import io.trino.spi.Plugin;
+import io.trino.testing.LocalQueryRunner;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import java.util.Set;
+
+import static io.trino.testing.TestingSession.testSessionBuilder;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotSame;
+import static org.testng.Assert.assertNull;
+
+public class TestHashFunctions
+{
+    private LocalQueryRunner runner;
+
+    @BeforeClass
+    public void init()
+    {
+        runner = LocalQueryRunner.create(testSessionBuilder().build());
+        runner.installPlugin(new Plugin() {
+            @Override
+            public Set<Class<?>> getFunctions()
+            {
+                return ImmutableSet.<Class<?>>builder()
+                        .add(HashFunctions.class)
+                        .build();
+            }
+        });
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void teardown()
+    {
+        if (runner != null) {
+            runner.close();
+            runner = null;
+        }
+    }
+
+    @Test
+    public void testHashConsistency() throws Exception
+    {
+        assertNull(runner.execute("select sn_hash(NULL)").getOnlyValue());
+        assertEquals(runner.execute("select sn_hash('123')").getOnlyValue(), runner.execute("select sn_hash('123')").getOnlyValue());
+        assertEquals(runner.execute("select sn_hash(123)").getOnlyValue(), runner.execute("select sn_hash(123)").getOnlyValue());
+        assertEquals(runner.execute("select sn_hash(0.123)").getOnlyValue(), runner.execute("select sn_hash(0.123)").getOnlyValue());
+        assertEquals(runner.execute("select sn_hash('abc')").getOnlyValue(), runner.execute("select sn_hash('abc')").getOnlyValue());
+        assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), runner.execute("select sn_hash(123)").getOnlyValue());
+        assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), "123");
+        assertNotSame(runner.execute("select sn_hash('')").getOnlyValue(), runner.execute("select sn_hash(' ')").getOnlyValue());
+    }
+
+    @Test
+    public void testDynamics() throws Exception
+    {
+        String prevRes = runner.execute("select sn_hash('123')").getOnlyValue().toString();
+        init();
+        assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), prevRes);
+    }
+}
