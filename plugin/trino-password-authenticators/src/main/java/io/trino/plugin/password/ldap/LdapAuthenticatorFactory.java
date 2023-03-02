@@ -17,6 +17,7 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import io.airlift.bootstrap.Bootstrap;
 import io.trino.plugin.base.ldap.LdapClientModule;
+import io.trino.plugin.base.ldap.LdapUtil;
 import io.trino.spi.security.PasswordAuthenticator;
 import io.trino.spi.security.PasswordAuthenticatorFactory;
 
@@ -42,6 +43,7 @@ public class LdapAuthenticatorFactory
                     configBinder(binder).bindConfig(LdapAuthenticatorConfig.class);
                     binder.bind(LdapAuthenticatorClient.class).in(Scopes.SINGLETON);
                     binder.bind(LdapAuthenticator.class).in(Scopes.SINGLETON);
+                    binder.bind(LdapUtil.class).in(Scopes.SINGLETON);
                 });
 
         Injector injector = app

@@ -17,6 +17,7 @@ import com.google.common.io.Closer;
 import io.airlift.units.Duration;
 import io.trino.plugin.base.ldap.JdkLdapClient;
 import io.trino.plugin.base.ldap.LdapClientConfig;
+import io.trino.plugin.base.ldap.LdapUtil;
 import io.trino.plugin.password.ldap.TestingOpenLdapServer.DisposableSubContext;
 import io.trino.spi.security.BasicPrincipal;
 import org.testcontainers.containers.Network;
@@ -87,14 +88,16 @@ public class TestLdapAuthenticatorWithTimeouts
             LdapAuthenticator ldapAuthenticator = new LdapAuthenticator(
                     new LdapAuthenticatorClient(
                             new JdkLdapClient(ldapConfig)),
-                    ldapAuthenticatorConfig);
+
+                    ldapAuthenticatorConfig,
+                    new LdapUtil());
             assertThatThrownBy(() -> ldapAuthenticator.createAuthenticatedPrincipal("alice", "alice-pass"))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageMatching(".*Authentication error.*");
 
             LdapClientConfig withIncreasedTimeout = ldapConfig.setLdapConnectionTimeout(new Duration(30, SECONDS));
             assertEquals(
-                    new LdapAuthenticator(new LdapAuthenticatorClient(new JdkLdapClient(withIncreasedTimeout)), ldapAuthenticatorConfig)
+                    new LdapAuthenticator(new LdapAuthenticatorClient(new JdkLdapClient(withIncreasedTimeout)), ldapAuthenticatorConfig, new LdapUtil())
                             .createAuthenticatedPrincipal("alice", "alice-pass"),
                     new BasicPrincipal("alice"));
         }
@@ -121,7 +124,8 @@ public class TestLdapAuthenticatorWithTimeouts
             LdapAuthenticator ldapAuthenticator = new LdapAuthenticator(
                     new LdapAuthenticatorClient(
                             new JdkLdapClient(ldapConfig)),
-                    ldapAuthenticatorConfig);
+                    ldapAuthenticatorConfig,
+                    new LdapUtil());
             assertThatThrownBy(() -> ldapAuthenticator.createAuthenticatedPrincipal("alice", "alice-pass"))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageMatching(".*Authentication error.*");
@@ -131,7 +135,8 @@ public class TestLdapAuthenticatorWithTimeouts
                     new LdapAuthenticator(
                             new LdapAuthenticatorClient(
                                     new JdkLdapClient(withIncreasedTimeout)),
-                            ldapAuthenticatorConfig)
+                            ldapAuthenticatorConfig,
+                            new LdapUtil())
                             .createAuthenticatedPrincipal("alice", "alice-pass"),
                     new BasicPrincipal("alice"));
         }

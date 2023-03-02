@@ -43,7 +43,7 @@ import static javax.naming.Context.SECURITY_AUTHENTICATION;
 import static javax.naming.Context.SECURITY_CREDENTIALS;
 import static javax.naming.Context.SECURITY_PRINCIPAL;
 
-public class JdkLdapClient
+public class    JdkLdapClient
         implements LdapClient
 {
     private static final Logger log = Logger.get(JdkLdapClient.class);
