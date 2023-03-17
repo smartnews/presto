@@ -31,6 +31,7 @@ import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -43,13 +44,15 @@ import static javax.naming.Context.SECURITY_AUTHENTICATION;
 import static javax.naming.Context.SECURITY_CREDENTIALS;
 import static javax.naming.Context.SECURITY_PRINCIPAL;
 
-public class    JdkLdapClient
+public class JdkLdapClient
         implements LdapClient
 {
     private static final Logger log = Logger.get(JdkLdapClient.class);
 
     private final Map<String, String> basicEnvironment;
     private final Optional<SSLContext> sslContext;
+
+    static HashMap<String, CloseableContext> ctxs;
 
     @Inject
     public JdkLdapClient(LdapClientConfig ldapConfig)
@@ -82,6 +85,8 @@ public class    JdkLdapClient
                 ldapConfig.getKeystorePassword(),
                 ldapConfig.getTrustStorePath(),
                 ldapConfig.getTruststorePassword());
+
+        this.ctxs = new HashMap<>();
     }
 
     @Override
@@ -94,13 +99,31 @@ public class    JdkLdapClient
     }
 
     @Override
-    public <T> T executeLdapQuery(String userName, String password, LdapQuery ldapQuery, LdapSearchResultProcessor<T> resultProcessor)
+    public synchronized <T> T executeLdapQuery(String userName, String password, LdapQuery ldapQuery, LdapSearchResultProcessor<T> resultProcessor)
             throws NamingException
     {
-        try (CloseableContext context = createUserDirContext(userName, password);
-                CloseableSearchResults search = searchContext(ldapQuery, context)) {
-            return resultProcessor.process(search.searchResults);
+        final int maxRetry = 2;
+        for (int retry = 0; retry <= maxRetry; retry++) {
+            CloseableContext context = ctxs.get(userName);
+            if (context == null) {
+                context = createUserDirContext(userName, password);
+                ctxs.put(userName, context);
+            }
+            try {
+                try (CloseableSearchResults search = searchContext(ldapQuery, context)) {
+                    return resultProcessor.process(search.searchResults);
+                }
+            }
+            catch (NamingException e) {
+                log.warn("executeLdapQuery failed at attempt {}.", retry, e);
+                if (retry >= maxRetry) {
+                    throw e;
+                }
+            }
+            context.close();
+            ctxs.remove(userName);
         }
+        throw new RuntimeException("executeLdapQuery failed with unknown error.");
     }
 
     private static CloseableSearchResults searchContext(LdapQuery ldapQuery, CloseableContext context)
