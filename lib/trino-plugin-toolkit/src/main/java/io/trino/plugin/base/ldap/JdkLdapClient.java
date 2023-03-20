@@ -31,7 +31,7 @@ import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
+import java.util.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -52,7 +52,7 @@ public class JdkLdapClient
     private final Map<String, String> basicEnvironment;
     private final Optional<SSLContext> sslContext;
 
-    static HashMap<String, CloseableContext> ctxs;
+    static ConcurrentHashMap<String, CloseableContext> ctxs = new ConcurrentHashMap<>();;
 
     @Inject
     public JdkLdapClient(LdapClientConfig ldapConfig)
@@ -85,8 +85,6 @@ public class JdkLdapClient
                 ldapConfig.getKeystorePassword(),
                 ldapConfig.getTrustStorePath(),
                 ldapConfig.getTruststorePassword());
-
-        this.ctxs = new HashMap<>();
     }
 
     @Override
@@ -99,29 +97,42 @@ public class JdkLdapClient
     }
 
     @Override
-    public synchronized <T> T executeLdapQuery(String userName, String password, LdapQuery ldapQuery, LdapSearchResultProcessor<T> resultProcessor)
+    public <T> T executeLdapQuery(String userName, String password, LdapQuery ldapQuery, LdapSearchResultProcessor<T> resultProcessor)
             throws NamingException
     {
         final int maxRetry = 2;
         for (int retry = 0; retry <= maxRetry; retry++) {
             CloseableContext context = ctxs.get(userName);
             if (context == null) {
-                context = createUserDirContext(userName, password);
-                ctxs.put(userName, context);
-            }
-            try {
-                try (CloseableSearchResults search = searchContext(ldapQuery, context)) {
-                    return resultProcessor.process(search.searchResults);
+                // Ensure only one context was created per user.
+                synchronized (ctxs) {
+                    context = ctxs.get(userName);
+                    if (context == null) {
+                        context = createUserDirContext(userName, password);
+                        ctxs.put(userName, context);
+                    }
                 }
             }
-            catch (NamingException e) {
-                log.warn("executeLdapQuery failed at attempt {}.", retry, e);
-                if (retry >= maxRetry) {
-                    throw e;
+
+            // Ensure context won't be interrupt during querying.
+            // In the case that `context` was already closed, this attempt will fail and
+            //   move to the next attempt.
+            synchronized (context) {
+                try {
+                    try (CloseableSearchResults search = searchContext(ldapQuery, context)) {
+                        return resultProcessor.process(search.searchResults);
+                    }
+                }
+                catch (NamingException e) {
+                    log.warn("executeLdapQuery failed at attempt %s: %s", retry, e, e.getMessage());
+                    if (retry >= maxRetry) {
+                        throw e;
+                    }
+                    // reset the context so that a new connection will be created in the next attempt
+                    context.close();
+                    ctxs.remove(userName);
                 }
             }
-            context.close();
-            ctxs.remove(userName);
         }
         throw new RuntimeException("executeLdapQuery failed with unknown error.");
     }
