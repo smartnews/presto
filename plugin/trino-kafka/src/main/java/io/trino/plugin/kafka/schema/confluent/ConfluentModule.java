@@ -41,6 +41,7 @@ import io.trino.decoder.protobuf.DynamicMessageProvider;
 import io.trino.decoder.protobuf.ProtobufRowDecoder;
 import io.trino.decoder.protobuf.ProtobufRowDecoderFactory;
 import io.trino.plugin.base.session.SessionPropertiesProvider;
+import io.trino.plugin.kafka.KafkaConfig;
 import io.trino.plugin.kafka.encoder.DispatchingRowEncoderFactory;
 import io.trino.plugin.kafka.encoder.RowEncoderFactory;
 import io.trino.plugin.kafka.encoder.avro.AvroRowEncoder;
@@ -53,6 +54,7 @@ import io.trino.spi.TrinoException;
 
 import javax.inject.Singleton;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,12 +64,12 @@ import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static io.airlift.configuration.ConfigBinder.configBinder;
 import static io.trino.plugin.kafka.encoder.EncoderModule.encoderFactory;
+import static io.trino.plugin.kafka.utils.PropertiesUtils.readProperties;
 import static io.trino.spi.StandardErrorCode.NOT_SUPPORTED;
 import static java.util.Objects.requireNonNull;
 
@@ -98,7 +100,8 @@ public class ConfluentModule
             ConfluentSchemaRegistryConfig confluentConfig,
             Set<SchemaProvider> schemaProviders,
             Set<SchemaRegistryClientPropertiesProvider> propertiesProviders,
-            ClassLoader classLoader)
+            ClassLoader classLoader,
+            KafkaConfig kafkaConfig)
     {
         requireNonNull(schemaProviders, "schemaProviders is null");
         requireNonNull(propertiesProviders, "propertiesProviders is null");
@@ -106,18 +109,24 @@ public class ConfluentModule
         List<String> baseUrl = confluentConfig.getConfluentSchemaRegistryUrls().stream()
                 .map(HostAddress::getHostText)
                 .collect(toImmutableList());
-
-        Map<String, ?> schemaRegistryClientProperties = propertiesProviders.stream()
-                .map(SchemaRegistryClientPropertiesProvider::getSchemaRegistryClientProperties)
-                .flatMap(properties -> properties.entrySet().stream())
-                .collect(toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<String, String> configurationProperties = null;
+        try {
+            configurationProperties = readProperties(kafkaConfig.getResourceConfigFiles());
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // Map<String, ?> schemaRegistryClientProperties = propertiesProviders.stream()
+        //        .map(SchemaRegistryClientPropertiesProvider::getSchemaRegistryClientProperties)
+        //        .flatMap(properties -> properties.entrySet().stream())
+        //        .collect(toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
 
         return new ClassLoaderSafeSchemaRegistryClient(
                 new CachedSchemaRegistryClient(
                         baseUrl,
                         confluentConfig.getConfluentSchemaRegistryClientCacheSize(),
                         ImmutableList.copyOf(schemaProviders),
-                        schemaRegistryClientProperties),
+                        configurationProperties),
                 classLoader);
     }
 
