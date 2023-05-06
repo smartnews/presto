@@ -126,7 +126,7 @@ public class KafkaPageSink
             keyBytes = keyEncoder.toByteArray();
             messageBytes = messageEncoder.toByteArray();
 
-            expectedWrittenBytes += keyBytes.length + messageBytes.length;
+            expectedWrittenBytes += (keyBytes == null ? -1 : keyBytes.length) + (messageBytes == null ? -1 : messageBytes.length);
 
             producer.send(new ProducerRecord<>(topicName, keyBytes, messageBytes), producerCallback);
         }
