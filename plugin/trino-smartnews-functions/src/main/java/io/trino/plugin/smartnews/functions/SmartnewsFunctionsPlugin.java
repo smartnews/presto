@@ -15,7 +15,10 @@ package io.trino.plugin.smartnews.functions;
 
 import com.google.common.collect.ImmutableSet;
 import io.trino.plugin.smartnews.event.QueryEventLoggerFactory;
+import io.trino.plugin.smartnews.functions.aggregation.HyperLogLogAggregation;
 import io.trino.plugin.smartnews.functions.aggregation.HyperLogLogMergeAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.MapWeightedCountAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionAggregation;
 import io.trino.spi.Plugin;
 import io.trino.spi.eventlistener.EventListenerFactory;
 import io.trino.spi.type.TypeManager;
@@ -41,6 +44,7 @@ public class SmartnewsFunctionsPlugin
     public Set<Class<?>> getFunctions()
     {
         return ImmutableSet.<Class<?>>builder()
+                .add(HyperLogLogAggregation.class)
                 .add(HyperLogLogMergeAggregation.class)
                 .add(HyperLogLogFunctions.class)
                 .add(HttpFunctions.class)
@@ -50,6 +54,13 @@ public class SmartnewsFunctionsPlugin
                 .add(ExtendedMapFunctions.class)
                 .add(PseudonymisationFunctions.class)
                 .add(HashFunctions.class)
+                .add(MapWeightedCountAggregation.class)
+                .add(ExtractHtmlTextFunction.class)
+                .add(FeatureTransformFunction.class)
+                .add(JsonFunctions.class)
+                .add(MapFunctions.class)
+                .add(MapUnionAggregation.class)
+                .add(HiveHashFunction.class)
                 .build();
     }
 

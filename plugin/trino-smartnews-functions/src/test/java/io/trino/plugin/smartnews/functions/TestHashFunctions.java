@@ -75,4 +75,42 @@ public class TestHashFunctions
         init();
         assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), prevRes);
     }
+
+    @Test
+    public void testmHash() throws Exception
+    {
+        Object ret = runner.execute("select mhash('123')").getOnlyValue();
+        assertEquals(2405477, (int) ret);
+
+        ret = runner.execute("select mhash('123', 1)").getOnlyValue();
+        assertEquals(1, (int) ret);
+
+        ret = runner.execute("select mhash('123', 2)").getOnlyValue();
+        assertEquals(1, (int) ret);
+
+        ret = runner.execute("select mhash(null)").getOnlyValue();
+        assertEquals(null, ret);
+
+        ret = runner.execute("select mhash('')").getOnlyValue();
+        assertEquals(11977257, (int) ret);
+
+        ret = runner.execute("select mhash('', 1999)").getOnlyValue();
+        assertEquals(1463, (int) ret);
+    }
+
+    @Test
+    public void testmHashArray() throws Exception
+    {
+        Object ret = runner.execute("select mhash(array['123'])").getOnlyValue();
+        assertEquals(2405477, (int) ret);
+
+        ret = runner.execute("select mhash(array[])").getOnlyValue();
+        assertEquals(1, (int) ret);
+
+        ret = runner.execute("select mhash(array['123', 'abc'])").getOnlyValue();
+        assertEquals(1992388, (int) ret);
+
+        ret = runner.execute("select mhash(array['123', 'abc', null])").getOnlyValue();
+        assertEquals(10771779, (int) ret);
+    }
 }

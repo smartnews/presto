@@ -2061,6 +2061,8 @@
                                     <exclude>io.netty:netty-transport</exclude>
                                     <exclude>io.netty:netty-codec</exclude>
                                     <exclude>io.netty:netty-transport-native-epoll</exclude>
+                                    <exclude>org.projectlombok:lombok</exclude>
+                                    <exclude>it.unimi.dsi:fastutil</exclude>
                                 </excludes>
                             </requireUpperBoundDeps>
                             <bannedDependencies>
