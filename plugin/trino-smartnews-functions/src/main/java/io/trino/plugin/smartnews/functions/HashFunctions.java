@@ -14,6 +14,7 @@
 package io.trino.plugin.smartnews.functions;
 
 import com.google.common.hash.Hashing;
+import com.smartnews.dmp.core.util.hash.SimHash;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.block.Block;
@@ -22,19 +23,26 @@ import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.function.Description;
 import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlType;
+import io.trino.spi.type.DoubleType;
 import io.trino.spi.type.StandardTypes;
 
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
+import static io.trino.spi.type.TypeUtils.readNativeValue;
+import static io.trino.spi.type.VarcharType.VARCHAR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class HashFunctions
 {
     private static final String HASH_KEY = Optional.ofNullable(System.getenv("SN_HASH_KEY")).orElse("smartnews");
+    private static SimHash<String> simHash;
 
     private HashFunctions()
     {
+        simHash = SimHash.build();
     }
 
     @Description("Dynamic consistent hash")
@@ -119,6 +127,30 @@ public final class HashFunctions
     public static long mur3Hash(@SqlType("array(varchar)") Block argument) throws SQLException
     {
         return mur3Hash(argument, 16777216);
+    }
+
+    @Description("_FUNC_(fv) - Calculate SimHash on a Map<String, Double>")
+    @ScalarFunction("simhash")
+    @SqlType(StandardTypes.VARBINARY)
+    public static Slice simHash(@SqlType("map(varchar,double)") Block mapblock) throws SQLException
+    {
+        Map<String, Double> m = new HashMap<>();
+        if (mapblock != null) {
+            for (int keyPosition = 0; keyPosition < mapblock.getPositionCount(); keyPosition += 2) {
+                Object keyObj = readNativeValue(VARCHAR, mapblock, keyPosition);
+                Object valueObj = readNativeValue(DoubleType.DOUBLE, mapblock, keyPosition + 1);
+                if (keyObj instanceof Slice key && valueObj instanceof Double value) {
+                    m.put(key.toStringUtf8(), value);
+                }
+            }
+        }
+
+        if (simHash == null) {
+            simHash = SimHash.build();
+        }
+
+        byte[] ret = simHash.simHash(m).toByteArray();
+        return Slices.wrappedBuffer(ret);
     }
 
     private static String sha256(String input)

@@ -15,10 +15,19 @@ package io.trino.plugin.smartnews.functions;
 
 import com.google.common.collect.ImmutableSet;
 import io.trino.plugin.smartnews.event.QueryEventLoggerFactory;
+import io.trino.plugin.smartnews.functions.actions.ChooseNotInterestedParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.FeedSurveyThumbClickParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.PostParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ReportImpressionsParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ReportParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ViewChannelParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ViewOpenArticleParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ViewOriginalPageParseFunctions;
 import io.trino.plugin.smartnews.functions.aggregation.HyperLogLogAggregation;
 import io.trino.plugin.smartnews.functions.aggregation.HyperLogLogMergeAggregation;
 import io.trino.plugin.smartnews.functions.aggregation.MapWeightedCountAggregation;
 import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.videoview.ViewedSegmentsOrAggregation;
 import io.trino.spi.Plugin;
 import io.trino.spi.eventlistener.EventListenerFactory;
 import io.trino.spi.type.TypeManager;
@@ -61,6 +70,16 @@ public class SmartnewsFunctionsPlugin
                 .add(MapFunctions.class)
                 .add(MapUnionAggregation.class)
                 .add(HiveHashFunction.class)
+                .add(VideoFunctions.class)
+                .add(ViewedSegmentsOrAggregation.class)
+                .add(ReportImpressionsParseFunctions.class)
+                .add(ViewChannelParseFunctions.class)
+                .add(ViewOriginalPageParseFunctions.class)
+                .add(ViewOpenArticleParseFunctions.class)
+                .add(PostParseFunctions.class)
+                .add(ReportParseFunctions.class)
+                .add(ChooseNotInterestedParseFunctions.class)
+                .add(FeedSurveyThumbClickParseFunctions.class)
                 .build();
     }
 

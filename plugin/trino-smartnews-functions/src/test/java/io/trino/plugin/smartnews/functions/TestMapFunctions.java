@@ -108,4 +108,12 @@ public class TestMapFunctions
                 .hasType(mapType(VarcharType.VARCHAR, VarcharType.VARCHAR))
                 .isEqualTo(expected);
     }
+
+    @org.testng.annotations.Test
+    public void testRemapLibsvm()
+    {
+        assertThat(assertions.function("remap_libsvm", "'2:1.0 3:4.5'", "integer '2400'", "'dummy'"))
+                .hasType(VarcharType.VARCHAR)
+                .isEqualTo("2402:1 2403:4.5");
+    }
 }

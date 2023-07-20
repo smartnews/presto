@@ -14,8 +14,10 @@
 package io.trino.plugin.smartnews.functions;
 
 import com.google.common.collect.ImmutableSet;
+import io.trino.Session;
 import io.trino.spi.Plugin;
 import io.trino.testing.LocalQueryRunner;
+import io.trino.testing.TestingSession;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -58,14 +60,15 @@ public class TestHashFunctions
     @Test
     public void testHashConsistency() throws Exception
     {
+        Session session = TestingSession.testSessionBuilder().build();
         assertNull(runner.execute("select sn_hash(NULL)").getOnlyValue());
-        assertEquals(runner.execute("select sn_hash('123')").getOnlyValue(), runner.execute("select sn_hash('123')").getOnlyValue());
-        assertEquals(runner.execute("select sn_hash(123)").getOnlyValue(), runner.execute("select sn_hash(123)").getOnlyValue());
-        assertEquals(runner.execute("select sn_hash(0.123)").getOnlyValue(), runner.execute("select sn_hash(0.123)").getOnlyValue());
-        assertEquals(runner.execute("select sn_hash('abc')").getOnlyValue(), runner.execute("select sn_hash('abc')").getOnlyValue());
-        assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), runner.execute("select sn_hash(123)").getOnlyValue());
-        assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), "123");
-        assertNotSame(runner.execute("select sn_hash('')").getOnlyValue(), runner.execute("select sn_hash(' ')").getOnlyValue());
+        assertEquals(runner.execute(session, "select sn_hash('123')").getOnlyValue(), runner.execute(session, "select sn_hash('123')").getOnlyValue());
+        assertEquals(runner.execute(session, "select sn_hash(123)").getOnlyValue(), runner.execute(session, "select sn_hash(123)").getOnlyValue());
+        assertEquals(runner.execute(session, "select sn_hash(0.123)").getOnlyValue(), runner.execute(session, "select sn_hash(0.123)").getOnlyValue());
+        assertEquals(runner.execute(session, "select sn_hash('abc')").getOnlyValue(), runner.execute(session, "select sn_hash('abc')").getOnlyValue());
+        assertNotSame(runner.execute(session, "select sn_hash('123')").getOnlyValue(), runner.execute(session, "select sn_hash(123)").getOnlyValue());
+        assertNotSame(runner.execute(session, "select sn_hash('123')").getOnlyValue(), "123");
+        assertNotSame(runner.execute(session, "select sn_hash('')").getOnlyValue(), runner.execute(session, "select sn_hash(' ')").getOnlyValue());
     }
 
     @Test
@@ -112,5 +115,12 @@ public class TestHashFunctions
 
         ret = runner.execute("select mhash(array['123', 'abc', null])").getOnlyValue();
         assertEquals(10771779, (int) ret);
+    }
+
+    @Test
+    public void testSimHash() throws Exception
+    {
+        Object ret = runner.execute("select to_hex(simhash(map(array['123'], array[double '1.23'])))").getOnlyValue();
+        assertEquals("A4F8344E8A95BB1041FD56CD77AF52C1", (String) ret);
     }
 }

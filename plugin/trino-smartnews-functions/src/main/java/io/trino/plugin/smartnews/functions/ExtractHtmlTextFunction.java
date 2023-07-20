@@ -15,13 +15,20 @@ package io.trino.plugin.smartnews.functions;
 
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+import io.trino.spi.block.Block;
+import io.trino.spi.block.BlockBuilder;
 import io.trino.spi.function.Description;
 import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlType;
 import io.trino.spi.type.StandardTypes;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.sql.SQLException;
+
+import static io.airlift.slice.Slices.utf8Slice;
+import static io.trino.spi.type.VarcharType.VARCHAR;
 
 public class ExtractHtmlTextFunction
 {
@@ -36,5 +43,24 @@ public class ExtractHtmlTextFunction
     {
         String argument = slice.toStringUtf8();
         return Slices.utf8Slice(Jsoup.parse(argument).text());
+    }
+
+    @Description("Extract text from HTML by selector")
+    @ScalarFunction("css_find")
+    @SqlType("array(varchar)")
+    public static Block extractHtmlText(@SqlType(StandardTypes.VARCHAR) Slice slice, @SqlType(StandardTypes.VARCHAR) Slice selector) throws SQLException
+    {
+        String html = slice.toStringUtf8();
+        String cssSelector = selector.toStringUtf8();
+
+        Elements elements = Jsoup.parse(html).select(cssSelector);
+
+        BlockBuilder blockBuilder = VARCHAR.createBlockBuilder(null, elements != null ? elements.size() : 1);
+        if (elements != null) {
+            for (Element element : elements) {
+                VARCHAR.writeSlice(blockBuilder, utf8Slice(element.outerHtml()));
+            }
+        }
+        return blockBuilder.build();
     }
 }

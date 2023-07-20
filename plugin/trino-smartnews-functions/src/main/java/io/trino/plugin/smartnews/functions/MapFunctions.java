@@ -13,6 +13,7 @@
  */
 package io.trino.plugin.smartnews.functions;
 
+import com.google.common.base.Joiner;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.block.Block;
@@ -24,6 +25,12 @@ import io.trino.spi.function.SqlType;
 import io.trino.spi.type.MapType;
 import io.trino.spi.type.StandardTypes;
 import io.trino.spi.type.TypeOperators;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static io.trino.spi.type.DoubleType.DOUBLE;
 import static io.trino.spi.type.TypeUtils.readNativeValue;
@@ -133,6 +140,65 @@ public class MapFunctions
             throws Exception
     {
         return string2map(slice, null, null);
+    }
+
+    @Description("_FUNC_(fv, bucket_start, idmap_file) - Re-mapping fid in libsvm fv")
+    @ScalarFunction("remap_libsvm")
+    @SqlType(StandardTypes.VARCHAR)
+    public static Slice remapLibsvm(@SqlType(StandardTypes.VARCHAR) Slice slice,
+                                    @SqlType(StandardTypes.INTEGER) long bucketStart,
+                                    @SqlType(StandardTypes.VARCHAR) Slice idmapFile)
+            throws Exception
+    {
+        String idmapFileStr = idmapFile.toStringUtf8();
+        if (!"dummy".equalsIgnoreCase(idmapFileStr)) {
+            throw new Exception("3rd argument idmap_file must be 'dummy', otherwise not implemented yet");
+        }
+
+        String uf = slice.toStringUtf8();
+        TreeMap<Integer, Double> map = new TreeMap<>();
+
+        for (String s : uf.split("[ ]+")) {
+            String[] split = s.split(":");
+            if (split.length == 2) {
+                //Integer fid = Integer.valueOf(split[0]);
+                try {
+                    Double v = Double.valueOf(split[1]);
+                    if (true /*idmapDummy*/) {
+                        if (false /*rebucket*/) {
+                            map.put((int) bucketStart + Integer.valueOf(split[0]) % 100_00000 /*rebucketSize*/, v);
+                        }
+                        else {
+                            map.put((int) bucketStart + Integer.valueOf(split[0]), v);
+                        }
+                    }
+//                    else {
+//                        if (idmap.containsKey(split[0])) {
+//                            if (rebucket) {
+//                                map.put(bucketStart + idmap.get(split[0]) % rebucketSize, v);
+//                            }
+//                            else {
+//                                map.put(bucketStart + idmap.get(split[0]), v);
+//                            }
+//                        }
+//                        else {
+//                            //throw new HiveException("Fid " + fid + " not int idmap");
+//                            //LOG.info("Fid " + fid + " not int idmap");
+//                        }
+//                    }
+                }
+                catch (NumberFormatException e) {
+                }
+            }
+        }
+
+        List<String> output = new ArrayList<>();
+        for (Map.Entry<Integer, Double> entry : map.entrySet()) {
+            output.add(String.format("%d:%s", entry.getKey(),
+                    new DecimalFormat("#.#####").format(entry.getValue())));
+        }
+
+        return Slices.utf8Slice(Joiner.on(" ").join(output));
     }
 
     private static double truncateDoubleIfNeeded(double d, double roundScale)

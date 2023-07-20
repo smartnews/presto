@@ -14,10 +14,13 @@
 package io.trino.plugin.smartnews.functions;
 
 import io.trino.operator.scalar.AbstractTestFunctions;
+import io.trino.spi.type.ArrayType;
 import io.trino.spi.type.VarcharType;
 import io.trino.sql.query.QueryAssertions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+
+import java.util.ArrayList;
 
 public class TestExtractHtmlTextFunction
         extends AbstractTestFunctions
@@ -54,5 +57,26 @@ public class TestExtractHtmlTextFunction
                 .assertThat()
                 .hasType(VarcharType.VARCHAR)
                 .isEqualTo("Hi Hello");
+    }
+
+    @org.testng.annotations.Test
+    public void testCssFind()
+    {
+        assertions.function("css_find", "null", "null")
+                .assertThat()
+                .isNull(new ArrayType(VarcharType.VARCHAR));
+
+        assertions.function("css_find", "''", "'abcd'")
+                .assertThat()
+                .hasType(new ArrayType(VarcharType.VARCHAR))
+                .isEqualTo(new ArrayList<String>());
+
+        ArrayList<String> expected = new ArrayList<>();
+        expected.add("<p class=\"a\">Hi</p>");
+        expected.add("<p class=\"a\">Hello</p>");
+        assertions.function("css_find", "'<html><body><h1> not used</h1><p class=\"a\">Hi</p><p class=\"a\">Hello</p></body></html>'", "'p.a'")
+                .assertThat()
+                .hasType(new ArrayType(VarcharType.VARCHAR))
+                .isEqualTo(expected);
     }
 }
