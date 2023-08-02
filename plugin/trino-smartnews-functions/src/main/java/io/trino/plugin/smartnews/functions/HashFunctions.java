@@ -13,6 +13,7 @@
  */
 package io.trino.plugin.smartnews.functions;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.Hashing;
 import com.smartnews.dmp.core.util.hash.SimHash;
 import io.airlift.slice.Slice;
@@ -29,15 +30,17 @@ import io.trino.spi.type.StandardTypes;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static io.trino.spi.type.TypeUtils.readNativeValue;
 import static io.trino.spi.type.VarcharType.VARCHAR;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class HashFunctions
 {
-    private static final String HASH_KEY = Optional.ofNullable(System.getenv("SN_HASH_KEY")).orElse("smartnews");
+    @SuppressWarnings("checkstyle:StaticVariableName")
+    private static String SN_HASH_KEY = System.getenv("SN_HASH_KEY");
+    public static final String SN_HASH_PREFIX = "H_";
+    public static final int SN_HASH_LENGTH = 20;
+
     private static SimHash<String> simHash;
 
     private HashFunctions()
@@ -50,8 +53,7 @@ public final class HashFunctions
     @SqlType(StandardTypes.VARCHAR)
     public static Slice hashStr(ConnectorSession session, @SqlType(StandardTypes.VARCHAR) Slice slice) throws SQLException
     {
-        String argument = slice.toStringUtf8();
-        return Slices.utf8Slice(sha256(HASH_KEY + argument.toString() + session.getQueryId()));
+        return genSnHashSlice(slice.toStringUtf8() + session.getQueryId());
     }
 
     @Description("Dynamic consistent hash")
@@ -59,7 +61,7 @@ public final class HashFunctions
     @SqlType(StandardTypes.VARCHAR)
     public static Slice hashInt(ConnectorSession session, @SqlType(StandardTypes.INTEGER) long argument) throws SQLException
     {
-        return Slices.utf8Slice(sha256(HASH_KEY + Long.toHexString(argument) + session.getQueryId()));
+        return genSnHashSlice(Long.toHexString(argument) + session.getQueryId());
     }
 
     @Description("Dynamic consistent hash")
@@ -67,7 +69,7 @@ public final class HashFunctions
     @SqlType(StandardTypes.VARCHAR)
     public static Slice hashInt(ConnectorSession session, @SqlType(StandardTypes.DOUBLE) double argument) throws SQLException
     {
-        return Slices.utf8Slice(sha256(HASH_KEY + Double.toHexString(argument) + session.getQueryId()));
+        return genSnHashSlice(Double.toHexString(argument) + session.getQueryId());
     }
 
     @Description("_FUNC_(string word) returns a murmurhash3 INT value starting from 1")
@@ -153,9 +155,19 @@ public final class HashFunctions
         return Slices.wrappedBuffer(ret);
     }
 
-    private static String sha256(String input)
+    @VisibleForTesting
+    static void setSnHashKey(String key)
     {
-        return Hashing.sha256().hashString(input, UTF_8).toString();
+        SN_HASH_KEY = key;
+    }
+
+    @SuppressWarnings("checkstyle:IllegalToken")
+    private static Slice genSnHashSlice(String input)
+    {
+        assert SN_HASH_KEY != null && SN_HASH_KEY.length() > 0 : "Env SN_HASH_KEY not found.";
+        String hashed = SN_HASH_PREFIX + Hashing.sha256().hashUnencodedChars(SN_HASH_KEY + input).toString();
+        String trimmed = hashed.substring(0, SN_HASH_LENGTH);
+        return Slices.utf8Slice(trimmed);
     }
 
     public static int mhash(String word, int numFeatures)
