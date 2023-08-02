@@ -78,7 +78,6 @@ public class TestHashFunctions
     {
         Session session = TestingSession.testSessionBuilder().build();
         String prevRes = runner.execute(session, "select sn_hash('123')").getOnlyValue().toString();
-        init();
         assertNotSame(runner.execute(session, "select sn_hash('123')").getOnlyValue(), prevRes);
     }
 
@@ -86,8 +85,6 @@ public class TestHashFunctions
     public void testHashingUTF8() throws Exception
     {
         String prevRes = runner.execute("select sn_hash('測試')").getOnlyValue().toString();
-        System.out.println(prevRes);
-        init();
         assertNotSame(runner.execute("select sn_hash('測試')").getOnlyValue(), prevRes);
     }
 
