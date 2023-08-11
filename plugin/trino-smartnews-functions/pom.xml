@@ -100,6 +100,18 @@
             <version>2.0.24</version>
             <exclusions>
                 <exclusion>
+                    <groupId>com.smartnews.dp.kafka</groupId>
+                    <artifactId>kafka-security</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.kafka</groupId>
+                    <artifactId>kafka-clients</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>ssm</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-commons</artifactId>
                 </exclusion>
@@ -223,10 +235,10 @@
                     <groupId>software.amazon.awssdk</groupId>
                     <artifactId>http-client-spi</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>software.amazon.awssdk</groupId>
-                    <artifactId>profiles</artifactId>
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>software.amazon.awssdk</groupId>-->
+<!--                    <artifactId>profiles</artifactId>-->
+<!--                </exclusion>-->
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>log4j-slf4j-impl</artifactId>
@@ -364,10 +376,11 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>software.amazon.awssdk</groupId>
-                    <artifactId>profiles</artifactId>
-                </exclusion>
+                <!-- this is required -->
+<!--                <exclusion>-->
+<!--                    <groupId>software.amazon.awssdk</groupId>-->
+<!--                    <artifactId>profiles</artifactId>-->
+<!--                </exclusion>-->
             </exclusions>
         </dependency>
 

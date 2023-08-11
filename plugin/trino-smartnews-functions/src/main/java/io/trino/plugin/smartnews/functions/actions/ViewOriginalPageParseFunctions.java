@@ -108,11 +108,6 @@ public class ViewOriginalPageParseFunctions
         String reqId = trackingToken != null ? trackingToken.get("1.1") : null;
         Utils.writeString(builder, reqId);
 
-        BlockBuilder mapBuilder = builder.beginBlockEntry();
-        for (Map.Entry<String, String> entry : trackingToken.entrySet()) {
-            Utils.writeString(mapBuilder, entry.getKey());
-            Utils.writeString(mapBuilder, entry.getValue());
-        }
-        builder.closeEntry();
+        Utils.writeMapStringString(builder, trackingToken);
     }
 }

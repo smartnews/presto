@@ -14,7 +14,6 @@
 package io.trino.plugin.smartnews.functions.actions;
 
 import com.smartnews.dmp.core.data.actions.ActionBase;
-import io.airlift.slice.Slices;
 import io.trino.spi.block.BlockBuilder;
 import io.trino.spi.type.ArrayType;
 import io.trino.spi.type.BigintType;
@@ -86,17 +85,17 @@ public class Utils
         writeString(builder, base.getTimezone());
         writeString(builder, base.getHardware());
 
-        BigintType.BIGINT.writeLong(builder, base.getEventTimestamp());
+        writeLong(builder, base.getEventTimestamp());
         writeString(builder, base.getAccountId());
-        BigintType.BIGINT.writeLong(builder, base.getUserCreationTimestamp());
+        writeLong(builder, base.getUserCreationTimestamp());
         List<Map<String, Integer>> abTest = base.getAbtestAsArray();
-        if (abTest != null && true) {
+        if (abTest != null) {
             BlockBuilder arrayBuilder = builder.beginBlockEntry();
             for (Map<String, Integer> m : abTest) {
                 BlockBuilder mapBuilder = arrayBuilder.beginBlockEntry();
                 for (Map.Entry<String, Integer> entry : m.entrySet()) {
-                    VarcharType.VARCHAR.writeSlice(mapBuilder, Slices.utf8Slice(entry.getKey()));
-                    IntegerType.INTEGER.writeLong(mapBuilder, entry.getValue());
+                    writeString(mapBuilder, entry.getKey());
+                    writeInt(mapBuilder, entry.getValue());
                 }
                 arrayBuilder.closeEntry();
             }
@@ -109,7 +108,7 @@ public class Utils
         if (base.getAbtestV3VariantIds() != null) {
             BlockBuilder arrayBuilder = builder.beginBlockEntry();
             for (Integer i : base.getAbtestV3VariantIds()) {
-                IntegerType.INTEGER.writeLong(arrayBuilder, i);
+                writeInt(arrayBuilder, i);
             }
             builder.closeEntry();
         }
@@ -155,6 +154,21 @@ public class Utils
         }
         else {
             DoubleType.DOUBLE.writeDouble(builder, (double) value);
+        }
+    }
+
+    public static void writeMapStringString(BlockBuilder builder, Map<String, String> map)
+    {
+        if (map == null) {
+            builder.appendNull();
+        }
+        else {
+            BlockBuilder mapBuilder = builder.beginBlockEntry();
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+                Utils.writeString(mapBuilder, entry.getKey());
+                Utils.writeString(mapBuilder, entry.getValue());
+            }
+            builder.closeEntry();
         }
     }
 

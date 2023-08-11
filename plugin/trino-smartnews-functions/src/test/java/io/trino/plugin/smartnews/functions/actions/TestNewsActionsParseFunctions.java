@@ -187,6 +187,16 @@ public class TestNewsActionsParseFunctions
                         ", array[4771, 5109, 5162, 5521, 6028, 6706, 6716] as ab_test_v3_variant_ids" +
                         ", cast('cr_ja_top' as varchar) as channel " +
                         ", array[cast(row(bigint '4571387392191110783', integer '0', 'b_ja_home_top_second_block', '01H5GNNE0E6EVG0V7199TT15KC', null, null) as row(link_id bigint, index integer, block varchar, req_id varchar, tracking_token map(varchar, varchar), cell_type integer))] as links");
+
+        // null abtest
+        assertions.query(String.format("SELECT cardinality(m.ab_test) FROM (select parse_report_impressions('%s')) t(m)", reportImpressionJson.replace("abtest", "abtest2")))
+                .assertThat()
+                .containsAll("select bigint '0'");
+
+        // null ab_test_v3_variant_ids
+        assertions.query(String.format("SELECT m.ab_test_v3_variant_ids FROM (select parse_report_impressions('%s')) t(m)", reportImpressionJson.replace("abtestV3VariantIds", "abtestV3VariantIds2")))
+                .assertThat()
+                .containsAll("select cast(null as array(integer)) as ab_test_v3_variant_ids");
     }
 
     static final String viewChannelJson = "{\n" +
@@ -520,6 +530,11 @@ public class TestNewsActionsParseFunctions
                         ", varchar '01H5GPXHB8GXF00FPYDZAS1CEK' as req_id " +
                         ", map(ARRAY[varchar '1.1',                 varchar '1.2', varchar '1.3',varchar '1.4',varchar '1.5',varchar '1.6',varchar  '3.1',varchar  '3.4',   varchar '3.5',varchar '9.1',                        varchar '9.2'], " +
                         "ARRAY[varchar '01H5GPXHB8GXF00FPYDZAS1CEK', varchar '2', varchar '1', varchar '3',     varchar '1', varchar '6', varchar '70', varchar '1',        varchar '1', varchar '0019775c3c0a00682e120601d4', varchar '0']) as tracking_token ");
+
+        // null tracking token
+        assertions.query(String.format("SELECT m.tracking_token FROM (select parse_post('%s')) t(m)", postJson.replace("trackingToken", "trackingToken2")))
+                .assertThat()
+                .containsAll("select cast(null as map(varchar, varchar)) as tracking_token ");
     }
 
     static final String reportJson = "{\n" +

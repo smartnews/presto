@@ -117,12 +117,7 @@ public class ReportImpressionsParseFunctions
                 }
                 else {
                     Map<String, String> trackingToken = (Map<String, String>) objs[4];
-                    BlockBuilder mapBuilder = rowBuilder.beginBlockEntry();
-                    for (Map.Entry<String, String> entry : trackingToken.entrySet()) {
-                        Utils.writeString(mapBuilder, entry.getKey());
-                        Utils.writeString(mapBuilder, entry.getValue());
-                    }
-                    rowBuilder.closeEntry();
+                    Utils.writeMapStringString(builder, trackingToken);
                 }
 
                 Utils.writeInt(rowBuilder, objs[5]);    // cell_type

@@ -28,6 +28,8 @@ import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.collect.cache.EvictableCacheBuilder;
 import io.trino.spi.TrinoException;
+import io.trino.spi.block.Block;
+import io.trino.spi.block.VariableWidthBlock;
 import io.trino.spi.function.Description;
 import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlNullable;
@@ -37,6 +39,7 @@ import net.thisptr.jackson.jq.JsonQuery;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -126,13 +129,11 @@ public final class ExtendedFunctions
         }
     }
 
-    @ScalarFunction
+    @ScalarFunction("hash_into")
     @SqlType(StandardTypes.BIGINT)
     public static long hashInto(@SqlType(StandardTypes.VARCHAR) Slice str, @SqlType(StandardTypes.BIGINT) long hashDimension)
     {
-        long r = 0;
-        r = r * 31 + str.toStringUtf8().hashCode();
-        r = r % hashDimension;
+        long r = str.toStringUtf8().hashCode() % hashDimension;
 
         if (r < 0) {
             r += hashDimension;
@@ -140,14 +141,7 @@ public final class ExtendedFunctions
         return 1 + r;
     }
 
-    @ScalarFunction
-    @SqlType(StandardTypes.BIGINT)
-    public static long hashIntoNaive(@SqlType(StandardTypes.VARCHAR) Slice str, @SqlType(StandardTypes.BIGINT) long hashDimension)
-    {
-        return (Math.abs(str.toStringUtf8().hashCode()) % hashDimension) + 1;
-    }
-
-    @ScalarFunction
+    @ScalarFunction("raw_mhash")
     @SqlType(StandardTypes.BIGINT)
     public static long rawMhash(@SqlType(StandardTypes.BIGINT) long seed,
             @SqlType(StandardTypes.VARCHAR) Slice data)
@@ -155,15 +149,71 @@ public final class ExtendedFunctions
         return Murmur3Hash32.hash((int) seed, data, 0, data.length());
     }
 
-    @ScalarFunction
-    @SqlType(StandardTypes.BIGINT)
-    public static long mhash(@SqlType(StandardTypes.VARCHAR) Slice str, @SqlType(StandardTypes.BIGINT) long hashDimension)
+    public static long mhashImpl(String str, long hashDimension)
     {
-        int l = (int) (murmur3.hashString(str.toStringUtf8(), StandardCharsets.UTF_8).asInt() % hashDimension);
+        int l = (int) (murmur3.hashString(str, StandardCharsets.UTF_8).asInt() % hashDimension);
         if (l < 0) {
             l += hashDimension;
         }
         return l + 1;
+    }
+
+    @Description("_FUNC_(string word) returns a murmurhash3 INT value starting from 1")
+    @ScalarFunction("mhash")
+    @SqlType(StandardTypes.INTEGER)
+    public static long mhash(@SqlType(StandardTypes.VARCHAR) Slice str, @SqlType(StandardTypes.BIGINT) long hashDimension)
+    {
+        return mhashImpl(str.toStringUtf8(), hashDimension);
+    }
+
+    @Description("_FUNC_(string word) returns a murmurhash3 INT value starting from 1")
+    @ScalarFunction("mhash")
+    @SqlType(StandardTypes.INTEGER)
+    public static long mur3Hash(@SqlType(StandardTypes.VARCHAR) Slice argument) throws SQLException
+    {
+        String str = argument.toStringUtf8();
+        return mhashImpl(str, 16777216);
+    }
+
+    @Description("_FUNC_(string word) returns a murmurhash3 INT value starting from 1")
+    @ScalarFunction("mhash")
+    @SqlType(StandardTypes.INTEGER)
+    public static long mur3Hash(@SqlType("array(varchar)") Block argument, @SqlType(StandardTypes.INTEGER) long seed) throws SQLException
+    {
+        if (argument instanceof VariableWidthBlock variableWidthBlock) {
+            int count = variableWidthBlock.getPositionCount();
+            if (count <= 0) {
+                return 1;
+            }
+            StringBuilder sb = new StringBuilder();
+
+            String str = null;
+            if (!variableWidthBlock.isNull(0)) {
+                int len = variableWidthBlock.getSliceLength(0);
+                Slice strSlice = variableWidthBlock.getSlice(0, 0, len);
+                str = strSlice == null ? null : strSlice.toStringUtf8();
+            }
+            sb.append(str);
+            for (int i = 1; i < count; i++) {
+                str = null;
+                if (!variableWidthBlock.isNull(i)) {
+                    int len = variableWidthBlock.getSliceLength(i);
+                    Slice strSlice = variableWidthBlock.getSlice(i, 0, len);
+                    str = strSlice == null ? null : strSlice.toStringUtf8();
+                }
+                sb.append("\t").append(str);
+            }
+            return mhashImpl(sb.toString(), seed);
+        }
+        throw new SQLException("mhash only support array(varchar) type");
+    }
+
+    @Description("_FUNC_(string word) returns a murmurhash3 INT value starting from 1")
+    @ScalarFunction("mhash")
+    @SqlType(StandardTypes.INTEGER)
+    public static long mur3Hash(@SqlType("array(varchar)") Block argument) throws SQLException
+    {
+        return mur3Hash(argument, 16777216);
     }
 
     static {

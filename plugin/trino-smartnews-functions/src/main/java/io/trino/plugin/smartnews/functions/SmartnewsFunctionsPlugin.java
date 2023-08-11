@@ -60,7 +60,6 @@ public class SmartnewsFunctionsPlugin
                 .add(AwsFunctions.class)
                 .add(AssertFunctions.class)
                 .add(ExtendedFunctions.class)
-                .add(ExtendedMapFunctions.class)
                 .add(PseudonymisationFunctions.class)
                 .add(HashFunctions.class)
                 .add(MapWeightedCountAggregation.class)
@@ -80,6 +79,7 @@ public class SmartnewsFunctionsPlugin
                 .add(ReportParseFunctions.class)
                 .add(ChooseNotInterestedParseFunctions.class)
                 .add(FeedSurveyThumbClickParseFunctions.class)
+                .add(StringFunctions.class)
                 .build();
     }
 

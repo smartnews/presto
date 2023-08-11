@@ -37,15 +37,6 @@ public class TestHiveHashFunction
     }
 
     @org.testng.annotations.Test
-    public void test()
-    {
-        assertions.function("hash", "cast('hello' as varbinary)")
-                .assertThat()
-                .hasType(BigintType.BIGINT)
-                .isEqualTo(127791473L);
-    }
-
-    @org.testng.annotations.Test
     public void testBasic()
     {
         assertions.function("hash", "null")

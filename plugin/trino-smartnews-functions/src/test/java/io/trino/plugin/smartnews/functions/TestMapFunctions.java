@@ -54,6 +54,17 @@ public class TestMapFunctions
     }
 
     @org.testng.annotations.Test
+    public void testMapNormBasicBigint()
+    {
+        HashMap<String, Double> expected = new HashMap<>();
+        expected.put("a", 0.4);
+        expected.put("b", 0.6);
+        assertThat(assertions.function("map_norm", "map(array['a','b'], array[bigint '2', bigint '3'])"))
+                .hasType(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE))
+                .isEqualTo(expected);
+    }
+
+    @org.testng.annotations.Test
     public void testMapNormNull()
     {
         assertThat(assertions.function("map_norm", "null"))

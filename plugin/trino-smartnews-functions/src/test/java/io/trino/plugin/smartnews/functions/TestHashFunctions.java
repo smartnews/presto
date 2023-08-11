@@ -13,16 +13,12 @@
  */
 package io.trino.plugin.smartnews.functions;
 
-import com.google.common.collect.ImmutableSet;
 import io.trino.Session;
-import io.trino.spi.Plugin;
 import io.trino.testing.LocalQueryRunner;
 import io.trino.testing.TestingSession;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.util.Set;
 
 import static io.trino.testing.TestingSession.testSessionBuilder;
 import static org.testng.Assert.assertEquals;
@@ -37,15 +33,7 @@ public class TestHashFunctions
     public void init()
     {
         runner = LocalQueryRunner.create(testSessionBuilder().build());
-        runner.installPlugin(new Plugin() {
-            @Override
-            public Set<Class<?>> getFunctions()
-            {
-                return ImmutableSet.<Class<?>>builder()
-                        .add(HashFunctions.class)
-                        .build();
-            }
-        });
+        runner.installPlugin(new SmartnewsFunctionsPlugin());
         HashFunctions.setSnHashKey("test_sn_hash_key");
     }
 
@@ -93,6 +81,8 @@ public class TestHashFunctions
     {
         assertEquals(runner.execute("select sn_hash('測試')").getOnlyValue().toString().substring(0, 2), HashFunctions.SN_HASH_PREFIX);
         assertEquals(runner.execute("select sn_hash('測試')").getOnlyValue().toString().length(), HashFunctions.SN_HASH_LENGTH);
+        String prevRes = runner.execute("select sn_hash('123')").getOnlyValue().toString();
+        assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), prevRes);
     }
 
     @Test
