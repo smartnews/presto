@@ -117,12 +117,12 @@ public class ViewChannelParseFunctions
                 Utils.writeString(rowBuilder, objs[3]);    // req_id
 
                 // tracking_token
-                if (objs[4] == null || true) {
+                if (objs[4] == null) {
                     rowBuilder.appendNull();
                 }
                 else {
                     Map<String, String> trackingToken = (Map<String, String>) objs[4];
-                    Utils.writeMapStringString(builder, trackingToken);
+                    Utils.writeMapStringString(rowBuilder, trackingToken);
                 }
 
                 Utils.writeInt(rowBuilder, objs[5]);    // cell_type

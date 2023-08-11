@@ -186,7 +186,8 @@ public class TestNewsActionsParseFunctions
                         ", array[map(array[cast('1.0' as varchar), cast ('definitionId' as varchar)], array[33, 2])] as ab_test" +
                         ", array[4771, 5109, 5162, 5521, 6028, 6706, 6716] as ab_test_v3_variant_ids" +
                         ", cast('cr_ja_top' as varchar) as channel " +
-                        ", array[cast(row(bigint '4571387392191110783', integer '0', 'b_ja_home_top_second_block', '01H5GNNE0E6EVG0V7199TT15KC', null, null) as row(link_id bigint, index integer, block varchar, req_id varchar, tracking_token map(varchar, varchar), cell_type integer))] as links");
+                        ", array[cast(row(bigint '4571387392191110783', integer '0', 'b_ja_home_top_second_block', '01H5GNNE0E6EVG0V7199TT15KC', " +
+                        "map(array['1.1', '1.2', '1.3', '3.1', '1.4', '1.5', '1.6', '3.4', '3.5', '9.1', '9.2'], array['01H5GNNE0E6EVG0V7199TT15KC', '2', '1', '70', '12', '1', '15', '1', '1', '001977571a0a0068b26b24413e', '0']), null) as row(link_id bigint, index integer, block varchar, req_id varchar, tracking_token map(varchar, varchar), cell_type integer))] as links");
 
         // null abtest
         assertions.query(String.format("SELECT cardinality(m.ab_test) FROM (select parse_report_impressions('%s')) t(m)", reportImpressionJson.replace("abtest", "abtest2")))
@@ -276,7 +277,8 @@ public class TestNewsActionsParseFunctions
                         "cast('cr_ja_top' as varchar) as channel " +
                         ", double '0.837' as index_duration" +
                         ", double '0.837' as total_duration" +
-                        ", array[cast(row(bigint '4571528451927843406', integer '0', 'cr_ja_top', '01H5GNN9QC34HA0J82DESF0FHW', null, null) as row(link_id bigint, index integer, block varchar, req_id varchar, tracking_token map(varchar, varchar), cell_type integer))] as links");
+                        ", array[cast(row(bigint '4571528451927843406', integer '0', 'cr_ja_top', '01H5GNN9QC34HA0J82DESF0FHW', " +
+                        "map(array['1.1', '1.2', '1.3', '3.1', '1.4', '1.5', '1.6', '3.4', '3.5'], array['01H5GNN9QC34HA0J82DESF0FHW', '1', '1', '55', '1', '1', '1', '1', '3']), null) as row(link_id bigint, index integer, block varchar, req_id varchar, tracking_token map(varchar, varchar), cell_type integer))] as links");
     }
 
     static final String viewOriginalPageJson = "{\n" +
