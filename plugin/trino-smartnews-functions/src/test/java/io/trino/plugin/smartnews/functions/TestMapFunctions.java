@@ -13,6 +13,7 @@
  */
 package io.trino.plugin.smartnews.functions;
 
+import io.trino.spi.type.BigintType;
 import io.trino.spi.type.DoubleType;
 import io.trino.spi.type.VarcharType;
 import io.trino.sql.query.QueryAssertions;
@@ -89,11 +90,22 @@ public class TestMapFunctions
                 .hasType(mapType(VarcharType.VARCHAR, VarcharType.VARCHAR))
                 .isEqualTo(expected);
 
+        // duplicated, keep the last one
+        assertThat(assertions.function("str_to_map", "'a:2.0;b:4.0;a:1.0'", "';'", "':'"))
+                .hasType(mapType(VarcharType.VARCHAR, VarcharType.VARCHAR))
+                .isEqualTo(expected);
+
         HashMap<String, String> expected2 = new HashMap<>();
         expected2.put("", null);
         assertThat(assertions.function("str_to_map", "''"))
                 .hasType(mapType(VarcharType.VARCHAR, VarcharType.VARCHAR))
                 .isEqualTo(expected2);
+
+        HashMap<String, String> expected3 = new HashMap<>();
+        expected3.put("a", null);
+        assertThat(assertions.function("str_to_map", "'a:'", "','", "':'"))
+                .hasType(mapType(VarcharType.VARCHAR, VarcharType.VARCHAR))
+                .isEqualTo(expected3);
     }
 
     @org.testng.annotations.Test
@@ -126,5 +138,53 @@ public class TestMapFunctions
         assertThat(assertions.function("remap_libsvm", "'2:1.0 3:4.5'", "integer '2400'", "'dummy'"))
                 .hasType(VarcharType.VARCHAR)
                 .isEqualTo("2402:1 2403:4.5");
+    }
+
+    @org.testng.annotations.Test
+    public void mapTopKDouble()
+    {
+        HashMap<String, Double> expected = new HashMap<>();
+        expected.put("c", (Double) 3.0);
+        expected.put("b", (Double) 4.0);
+        assertThat(assertions.function("map_topk", "map(array[varchar 'a',varchar 'b',varchar 'c',varchar 'd'], array[double '1.0', double '4.0', double '3.0', double '2.0'])", "2"))
+                .hasType(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE))
+                .isEqualTo(expected);
+
+        expected = new HashMap<>();
+        assertThat(assertions.function("map_topk", "map(array[varchar 'a',varchar 'b',varchar 'c',varchar 'd'], array[double '1.0', double '4.0', double '3.0', double '2.0'])", "0"))
+                .hasType(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE))
+                .isEqualTo(expected);
+
+        assertThat(assertions.function("map_topk", "map(array[varchar 'a',varchar 'b',varchar 'c',varchar 'd'], array[double '1.0', double '4.0', double '3.0', double '2.0'])", "-1"))
+                .hasType(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE))
+                .isEqualTo(expected);
+
+        assertions.query("select map_topk(null, 1) is null")
+                .assertThat()
+                .containsAll("select true");
+    }
+
+    @org.testng.annotations.Test
+    public void mapTopKBigint()
+    {
+        HashMap<String, Long> expected = new HashMap<>();
+        expected.put("c", (Long) 3L);
+        expected.put("b", (Long) 4L);
+        assertThat(assertions.function("map_topk", "map(array[varchar 'a',varchar 'b',varchar 'c',varchar 'd'], array[bigint '1', bigint '4', bigint '3', bigint '2'])", "2"))
+                .hasType(mapType(VarcharType.VARCHAR, BigintType.BIGINT))
+                .isEqualTo(expected);
+
+        expected = new HashMap<>();
+        assertThat(assertions.function("map_topk", "map(array[varchar 'a',varchar 'b',varchar 'c',varchar 'd'], array[bigint '1', bigint '4', bigint '3', bigint '2'])", "0"))
+                .hasType(mapType(VarcharType.VARCHAR, BigintType.BIGINT))
+                .isEqualTo(expected);
+
+        assertThat(assertions.function("map_topk", "map(array[varchar 'a',varchar 'b',varchar 'c',varchar 'd'], array[bigint '1', bigint '4', bigint '3', bigint '2'])", "-1"))
+                .hasType(mapType(VarcharType.VARCHAR, BigintType.BIGINT))
+                .isEqualTo(expected);
+
+        assertions.query("select map_topk(null, 1) is null")
+                .assertThat()
+                .containsAll("select true");
     }
 }

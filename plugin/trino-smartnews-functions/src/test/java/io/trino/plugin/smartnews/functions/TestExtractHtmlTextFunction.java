@@ -78,5 +78,12 @@ public class TestExtractHtmlTextFunction
                 .assertThat()
                 .hasType(new ArrayType(VarcharType.VARCHAR))
                 .isEqualTo(expected);
+
+        ArrayList<String> expected2 = new ArrayList<>();
+        expected2.add("<img src=\"https://static0.xdaimages.com/press.jpg\" alt=\"Samsung\" width=\"2100\" height=\"1400\" fileSize=\"187\">");
+        assertions.function("css_find", "'<img src=\"https://static0.xdaimages.com/press.jpg\" alt=\"Samsung\" width=\"2100\" height=\"1400\" fileSize=\"187\" />'", "'img'")
+                .assertThat()
+                .hasType(new ArrayType(VarcharType.VARCHAR))
+                .isEqualTo(expected2);
     }
 }

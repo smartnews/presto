@@ -11,21 +11,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.smartnews.functions.aggregation;
+package io.trino.plugin.smartnews.functions.aggregation.state;
 
-import io.airlift.slice.Slice;
+import io.trino.plugin.smartnews.functions.aggregation.map.KeyValuePairsMin;
+import io.trino.plugin.smartnews.functions.aggregation.serializer.KeyValuePairMinStateSerializer;
 import io.trino.spi.function.AccumulatorState;
 import io.trino.spi.function.AccumulatorStateMetadata;
+import io.trino.spi.type.Type;
 
-import java.util.Map;
-
-@AccumulatorStateMetadata(stateSerializerClass = MapWeightedCountStateSerializer.class, stateFactoryClass = MapWeightedCountStateFactory.class)
-public interface MapString2DoubleState
+@AccumulatorStateMetadata(
+        stateFactoryClass = KeyValuePairsMinStateFactory.class,
+        stateSerializerClass = KeyValuePairMinStateSerializer.class,
+        typeParameters = {"K", "V"},
+        serializedType = "MAP(K, V)")
+public interface KeyValuePairsMinState
         extends AccumulatorState
 {
-    Map<Slice, Double> getMap();
+    KeyValuePairsMin get();
 
-    void setMap(Map<Slice, Double> value);
+    void set(KeyValuePairsMin value);
 
-    void addMemoryUsage(int value);
+    void addMemoryUsage(long memory);
+
+    Type getKeyType();
+
+    Type getValueType();
 }

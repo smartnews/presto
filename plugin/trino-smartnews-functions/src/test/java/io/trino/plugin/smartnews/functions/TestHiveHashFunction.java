@@ -121,6 +121,12 @@ public class TestHiveHashFunction
                 .hasType(BigintType.BIGINT)
                 .isEqualTo(-1188281831L);
 
+        // map of map
+        assertions.function("hash", "map(array['a'], array[map(array['b'], array[double '1.2'])])")
+                .assertThat()
+                .hasType(BigintType.BIGINT)
+                .isEqualTo(213909507L);
+
         // array of 1 map with 1 KV
         assertions.function("hash", "array[map(array['kjkj'], array[integer '3'])]")
                 .assertThat()

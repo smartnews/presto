@@ -25,8 +25,10 @@ import io.trino.plugin.smartnews.functions.actions.ViewOpenArticleParseFunctions
 import io.trino.plugin.smartnews.functions.actions.ViewOriginalPageParseFunctions;
 import io.trino.plugin.smartnews.functions.aggregation.HyperLogLogAggregation;
 import io.trino.plugin.smartnews.functions.aggregation.HyperLogLogMergeAggregation;
-import io.trino.plugin.smartnews.functions.aggregation.MapWeightedCountAggregation;
-import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapTopkAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionMaxAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionMinAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionSumAggregation;
 import io.trino.plugin.smartnews.functions.aggregation.videoview.ViewedSegmentsOrAggregation;
 import io.trino.spi.Plugin;
 import io.trino.spi.eventlistener.EventListenerFactory;
@@ -62,12 +64,10 @@ public class SmartnewsFunctionsPlugin
                 .add(ExtendedFunctions.class)
                 .add(PseudonymisationFunctions.class)
                 .add(HashFunctions.class)
-                .add(MapWeightedCountAggregation.class)
                 .add(ExtractHtmlTextFunction.class)
                 .add(FeatureTransformFunction.class)
                 .add(JsonFunctions.class)
                 .add(MapFunctions.class)
-                .add(MapUnionAggregation.class)
                 .add(HiveHashFunction.class)
                 .add(VideoFunctions.class)
                 .add(ViewedSegmentsOrAggregation.class)
@@ -80,6 +80,10 @@ public class SmartnewsFunctionsPlugin
                 .add(ChooseNotInterestedParseFunctions.class)
                 .add(FeedSurveyThumbClickParseFunctions.class)
                 .add(StringFunctions.class)
+                .add(MapUnionSumAggregation.class)
+                .add(MapUnionMaxAggregation.class)
+                .add(MapUnionMinAggregation.class)
+                .add(MapTopkAggregation.class)
                 .build();
     }
 

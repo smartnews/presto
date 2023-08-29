@@ -40,6 +40,8 @@ public final class HashFunctions
     public static final String SN_HASH_PREFIX = "H_";
     public static final int SN_HASH_LENGTH = 20;
 
+    private static final String SimHashLock = "";
+
     private static SimHash<String> simHash;
 
     private HashFunctions()
@@ -87,11 +89,16 @@ public final class HashFunctions
             }
         }
 
-        if (simHash == null) {
-            simHash = SimHash.build();
+        byte[] ret = null;
+        synchronized (SimHashLock) {
+            // within simHash, there is a cache of type HashMap.
+            // HashMap<T, BitSet> hashingDim, which is not thread safe
+            // so we need to synchronize here.
+            if (simHash == null) {
+                simHash = SimHash.build();
+            }
+            ret = simHash.simHash(m).toByteArray();
         }
-
-        byte[] ret = simHash.simHash(m).toByteArray();
         return Slices.wrappedBuffer(ret);
     }
 

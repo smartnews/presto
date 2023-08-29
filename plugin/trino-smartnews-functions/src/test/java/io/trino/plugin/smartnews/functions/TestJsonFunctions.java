@@ -69,6 +69,12 @@ public class TestJsonFunctions
                 .hasType(VarcharType.VARCHAR)
                 .isEqualTo("{\"a\":1,\"b\":2,\"c\":3}");
 
+        // duplicate
+        assertions.function("merge_json", "'{\"a\": 1, \"b\": 2}'", "'{\"a\": 3}'")
+                .assertThat()
+                .hasType(VarcharType.VARCHAR)
+                .isEqualTo("{\"a\":3,\"b\":2}");
+
         assertions.function("merge_json", "'{\"a\": 1}'", "'{\"b\": 2}'", "'{\"c\": 3}'")
                 .assertThat()
                 .hasType(VarcharType.VARCHAR)

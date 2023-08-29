@@ -34,6 +34,10 @@ mvn -f ../../client/trino-cli/pom.xml clean install -DskipTests
 
 # Build the docker image
 sh ./build.sh
+if [ $? -ne 0 ]; then { echo "Build Failed, aborting." ; exit 1; } fi
+
+echo "====================================="
+echo "Starting Pushing"
 
 docker tag trino:407-arm64 165463520094.dkr.ecr.ap-northeast-1.amazonaws.com/realtime-streaming/sn-trino:407-arm64-$VERSION
 docker tag trino:407-amd64 165463520094.dkr.ecr.ap-northeast-1.amazonaws.com/realtime-streaming/sn-trino:407-amd64-$VERSION

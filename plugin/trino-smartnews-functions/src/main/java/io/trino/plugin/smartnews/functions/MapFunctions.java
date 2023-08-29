@@ -18,20 +18,30 @@ import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.block.Block;
 import io.trino.spi.block.BlockBuilder;
+import io.trino.spi.function.Convention;
 import io.trino.spi.function.Description;
+import io.trino.spi.function.OperatorDependency;
+import io.trino.spi.function.OperatorType;
 import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlNullable;
 import io.trino.spi.function.SqlType;
+import io.trino.spi.function.TypeParameter;
 import io.trino.spi.type.MapType;
 import io.trino.spi.type.StandardTypes;
+import io.trino.spi.type.Type;
 import io.trino.spi.type.TypeOperators;
 
+import java.lang.invoke.MethodHandle;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
+import static io.trino.spi.function.InvocationConvention.InvocationArgumentConvention.BLOCK_POSITION;
+import static io.trino.spi.function.InvocationConvention.InvocationReturnConvention.FAIL_ON_NULL;
 import static io.trino.spi.type.DoubleType.DOUBLE;
 import static io.trino.spi.type.TypeUtils.readNativeValue;
 import static io.trino.spi.type.VarcharType.VARCHAR;
@@ -40,6 +50,107 @@ public class MapFunctions
 {
     private MapFunctions()
     {
+    }
+
+    @Description("Keep the top K entry in the map")
+    @ScalarFunction("map_topk")
+    @TypeParameter("V")
+    @TypeParameter("K")
+    @SqlType("map(K,V)")
+    public static Block mapTopK(@OperatorDependency(
+                                    operator = OperatorType.COMPARISON_UNORDERED_FIRST,
+                                    argumentTypes = {"V", "V"},
+                                    convention = @Convention(arguments = {BLOCK_POSITION, BLOCK_POSITION}, result = FAIL_ON_NULL))
+                                    MethodHandle compare,
+                                @TypeParameter("K") Type keyType,
+                                @TypeParameter("V") Type valueType,
+                                @SqlType("map(K, V)") Block mapblock,
+                                @SqlType(StandardTypes.INTEGER) long kk)
+            throws Throwable
+    {
+        int k = (int) kk;
+        MapType mapType = new MapType(keyType, valueType, new TypeOperators());
+        if (k <= 0) {
+            // return an empty map
+            BlockBuilder mapBlockBuilder = mapType.createBlockBuilder(null, 0);
+            BlockBuilder entryBuilder = mapBlockBuilder.beginBlockEntry();
+            mapBlockBuilder.closeEntry();
+            Block ret = mapType.getObject(mapBlockBuilder.build(), 0);
+            return ret;
+        }
+        int size = mapblock.getPositionCount() / 2;
+        if (size <= k) {
+            return mapblock;
+        }
+
+        // keep the top k entry
+        int[] entryIndex = new int[k];
+        for (int i = 0; i < k; i++) {
+            entryIndex[i] = i;
+        }
+
+        // build the heap
+        for (int i = k / 2 - 1; i >= 0; i--) {
+            minHeapify(mapblock, entryIndex, i, k, compare);
+        }
+
+        // handle the rest beyond k
+        for (int i = k; i < size; i++) {
+            if (compareMapValueAtIndex(mapblock, compare, entryIndex[0], i) < 0) {
+                entryIndex[0] = i;
+                minHeapify(mapblock, entryIndex, 0, k, compare);
+            }
+        }
+
+        // output
+        BlockBuilder mapBlockBuilder = mapType.createBlockBuilder(null, k);
+        BlockBuilder entryBuilder = mapBlockBuilder.beginBlockEntry();
+        for (int i = 0; i < entryIndex.length; i++) {
+            keyType.appendTo(mapblock, keyIdxInMap(entryIndex[i]), entryBuilder);
+            valueType.appendTo(mapblock, valueIdxInMap(entryIndex[i]), entryBuilder);
+        }
+        mapBlockBuilder.closeEntry();
+        Block ret = mapType.getObject(mapBlockBuilder.build(), 0);
+        return ret;
+    }
+
+    static long compareMapValueAtIndex(Block block, MethodHandle compare, int i, int j) throws Throwable
+    {
+        return (long) compare.invokeExact(block, valueIdxInMap(i), block, valueIdxInMap(j));
+    }
+
+    static int valueIdxInMap(int i)
+    {
+        return i * 2 + 1;
+    }
+
+    static int keyIdxInMap(int i)
+    {
+        return i * 2;
+    }
+
+    static void minHeapify(Block block, int[] idx, int i, int n, MethodHandle compare) throws Throwable
+    {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int smallest = i;
+        if (left < n && compareMapValueAtIndex(block, compare, left, i) < 0) {
+            smallest = left;
+        }
+        if (right < n && compareMapValueAtIndex(block, compare, right, smallest) < 0) {
+            smallest = right;
+        }
+        if (smallest != i) {
+            swapKeysAndValues(idx, i, smallest);
+            minHeapify(block, idx, smallest, n, compare);
+        }
+    }
+
+    static void swapKeysAndValues(int[] idx, int i, int j)
+    {
+        int tmp = idx[i];
+        idx[i] = idx[j];
+        idx[j] = tmp;
     }
 
     @Description("Normalize map's value based on the total sum")
@@ -112,15 +223,21 @@ public class MapFunctions
         MapType mapType = new MapType(VARCHAR, VARCHAR, new TypeOperators());
         BlockBuilder mapBlockBuilder = mapType.createBlockBuilder(null, pairs.length);
         BlockBuilder entryBuilder = mapBlockBuilder.beginBlockEntry();
-        for (String row : pairs) {
+        // key may be duplicated, we only keep the last one
+        Set<String> keySet = new HashSet<>();
+        for (int i = pairs.length - 1; i >= 0; i--) {
+            String row = pairs[i];
             String[] kv = row.split(delimiter2Str);
-            if (kv.length == 2) {
-                VARCHAR.writeSlice(entryBuilder, Slices.utf8Slice(kv[0]));
-                VARCHAR.writeSlice(entryBuilder, Slices.utf8Slice(kv[1]));
-            }
-            else if (kv.length == 1) {
-                VARCHAR.writeSlice(entryBuilder, Slices.utf8Slice(kv[0]));
-                entryBuilder.appendNull();
+            if (!keySet.contains(kv[0])) {
+                if (kv.length == 2) {
+                    VARCHAR.writeSlice(entryBuilder, Slices.utf8Slice(kv[0]));
+                    VARCHAR.writeSlice(entryBuilder, Slices.utf8Slice(kv[1]));
+                }
+                else if (kv.length == 1) {
+                    VARCHAR.writeSlice(entryBuilder, Slices.utf8Slice(kv[0]));
+                    entryBuilder.appendNull();
+                }
+                keySet.add(kv[0]);
             }
         }
         mapBlockBuilder.closeEntry();

@@ -37,6 +37,7 @@ import io.trino.spi.type.TimestampType;
 import io.trino.spi.type.Type;
 import io.trino.spi.type.TypeUtils;
 import io.trino.spi.type.VarbinaryType;
+import io.trino.spi.type.VarcharType;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -110,6 +111,14 @@ public final class HiveHashFunction
             long longValue = Double.doubleToLongBits(doubleValue);
             return (int) ((longValue >>> 32) ^ longValue);
         }
+        else if (type instanceof VarcharType && value instanceof String stringValue) {
+            byte[] bytes = stringValue.getBytes(StandardCharsets.UTF_8);
+            int r = 0;
+            for (int i = 0; i < bytes.length; i++) {
+                r = r * 31 + bytes[i];
+            }
+            return r;
+        }
         else if (value instanceof Slice stringSlice) {
             String stringValue = stringSlice.toStringUtf8();
             if (stringValue == null) {
@@ -133,8 +142,8 @@ public final class HiveHashFunction
                     Object key = TypeUtils.readNativeValue(keyType, mapBlock, i);
                     Object val = TypeUtils.readNativeValue(valueType, mapBlock, i + 1);
 
-                    int keyHash = hash(type, key);
-                    int valHash = hash(type, val);
+                    int keyHash = hash(keyType, key);
+                    int valHash = hash(valueType, val);
                     r += keyHash ^ valHash;
                 }
                 return r;
