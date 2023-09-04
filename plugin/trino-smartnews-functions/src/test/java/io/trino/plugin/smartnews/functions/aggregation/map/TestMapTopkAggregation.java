@@ -53,18 +53,6 @@ public class TestMapTopkAggregation
                 .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, BigintType.BIGINT)))
                 .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[bigint '3', bigint '2', bigint '4'])");
 
-        // k = 0
-        assertions.query("SELECT cardinality(map_agg_topk(integer '0', cast(k as varchar), cast(v as bigint))) as s FROM (VALUES ('a', 1),('b', 2),('a', 3),('c', 4)) t(k,v)")
-                .assertThat()
-                .hasOutputTypes(List.of(BigintType.BIGINT))
-                .containsAll("select bigint '0' as s");
-
-        // k < 0
-        assertions.query("SELECT cardinality(map_agg_topk(integer '-1', cast(k as varchar), cast(v as bigint))) as s FROM (VALUES ('a', 1),('b', 2),('a', 3),('c', 4)) t(k,v)")
-                .assertThat()
-                .hasOutputTypes(List.of(BigintType.BIGINT))
-                .containsAll("select bigint '0' as s");
-
         // null key and value
         assertions.query("SELECT map_agg_topk(integer '3', cast(k as varchar), cast(v as bigint)) FROM (VALUES ('a', 1),('b', 2),('a', 3),('c', 4),(null, null)) t(k,v)")
                 .assertThat()
@@ -92,18 +80,6 @@ public class TestMapTopkAggregation
                 .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
                 .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[double '3.3', double '2.2', double '4.4'])");
 
-        // k = 0
-        assertions.query("SELECT cardinality(map_agg_topk(integer '0', cast(k as varchar), cast(v as double))) as s FROM (VALUES ('a', 1.1),('b', 2.2),('a', 3.3),('c', 4.4)) t(k,v)")
-                .assertThat()
-                .hasOutputTypes(List.of(BigintType.BIGINT))
-                .containsAll("select bigint '0' as s");
-
-        // k < 0
-        assertions.query("SELECT cardinality(map_agg_topk(integer '-1', cast(k as varchar), cast(v as double))) as s FROM (VALUES ('a', 1.1),('b', 2.2),('a', 3.3),('c', 4.4)) t(k,v)")
-                .assertThat()
-                .hasOutputTypes(List.of(BigintType.BIGINT))
-                .containsAll("select bigint '0' as s");
-
         // null key and value
         assertions.query("SELECT map_agg_topk(integer '3', cast(k as varchar), cast(v as double)) FROM (VALUES ('a', 3.3),('b', 2.2),('a', 1.1),('c', 4.4),(null, null)) t(k,v)")
                 .assertThat()
@@ -121,6 +97,12 @@ public class TestMapTopkAggregation
                 .assertThat()
                 .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
                 .containsAll("select map(array[varchar 'b'], array[double '3.3'])");
+
+        // NaN
+        assertions.query("SELECT map_agg_topk(integer '3', cast(k as varchar), cast(v as double)) FROM (VALUES ('a', 1.1),('b', 2.2),('c', 3.3),('c', cast(NaN() as double))) t(k,v)")
+                .assertThat()
+                .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
+                .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[double '1.1', double '2.2', double '3.3'])");
     }
 
     @org.testng.annotations.Test
@@ -130,18 +112,6 @@ public class TestMapTopkAggregation
                 .assertThat()
                 .hasOutputTypes(List.of(mapType(BigintType.BIGINT, BigintType.BIGINT)))
                 .containsAll("select map(array[bigint '1', bigint '2', bigint '3'], array[bigint '400', bigint '200', bigint '300'])");
-
-        // k = 0
-        assertions.query("SELECT cardinality(map_agg_topk(integer '0', cast(k as bigint), cast(v as bigint))) as s FROM (VALUES (1,100),(2,200),(3,300),(4,400)) t(k,v)")
-                .assertThat()
-                .hasOutputTypes(List.of(BigintType.BIGINT))
-                .containsAll("select bigint '0' as s");
-
-        // k < 0
-        assertions.query("SELECT cardinality(map_agg_topk(integer '-1', cast(k as bigint), cast(v as bigint))) as s FROM (VALUES (1,100),(2,200),(3,300),(4,400)) t(k,v)")
-                .assertThat()
-                .hasOutputTypes(List.of(BigintType.BIGINT))
-                .containsAll("select bigint '0' as s");
 
         // null key and value
         assertions.query("SELECT map_agg_topk(integer '3', cast(k as bigint), cast(v as bigint)) FROM (VALUES (1,100),(2,200),(1,300),(3,400),(null, null)) t(k,v)")

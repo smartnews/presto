@@ -78,7 +78,18 @@ public class KeyValuePairsMax
             return Math.max((Long) a, (Long) b);
         }
         else if (valueType instanceof DoubleType) {
-            return Math.max((Double) a, (Double) b);
+            Double aa = (Double) a;
+            Double bb = (Double) b;
+            if (Double.isNaN(aa) && Double.isNaN(bb)) {
+                return a;
+            }
+            if (Double.isNaN(aa)) {
+                return b;
+            }
+            if (Double.isNaN(bb)) {
+                return a;
+            }
+            return Math.max(aa, bb);
         }
         else if (valueType instanceof IntegerType) {
             return Math.max((Integer) a, ((Integer) b));

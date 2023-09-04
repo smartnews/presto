@@ -69,8 +69,30 @@ public class FeedSurveyThumbClickParseFunctions
     public Block parse(@SqlType(StandardTypes.VARCHAR) Slice json)
             throws Exception
     {
-        FeedSurveyThumbClickAction record = (FeedSurveyThumbClickAction) parser.parseEssential(json.toStringUtf8());
+        return parseImpl(json, false);
+    }
 
+    @Description("parse action feedSurveyThumbClick")
+    @ScalarFunction("parse_feed_survey_thumb_click_null_on_bad_input")
+    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), " +
+            "link_id bigint, reaction_type varchar, city varchar, region varchar, country_iso_code varchar, lat double, lon double)")
+    @SqlNullable
+    public Block parseNullOnBadInput(@SqlType(StandardTypes.VARCHAR) Slice json)
+            throws Exception
+    {
+        return parseImpl(json, true);
+    }
+
+    public Block parseImpl(Slice json, boolean skipBadInput)
+            throws Exception
+    {
+        FeedSurveyThumbClickAction record = (FeedSurveyThumbClickAction) parser.parseEssential(json.toStringUtf8());
+        if (record == null) {
+            if (skipBadInput) {
+                return null;
+            }
+            throw new RuntimeException("Failed to parse essential: " + json.toStringUtf8());
+        }
         if (pageBuilder.isFull()) {
             pageBuilder.reset();
         }

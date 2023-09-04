@@ -150,6 +150,11 @@ public class TestMapFunctions
                 .hasType(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE))
                 .isEqualTo(expected);
 
+        // NaN
+        assertThat(assertions.function("map_topk", "map(array[varchar 'a',varchar 'b',varchar 'c',varchar 'd'], array[double '1.0', double '4.0', double '3.0', cast(NaN() as double)])", "2"))
+                .hasType(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE))
+                .isEqualTo(expected);
+
         expected = new HashMap<>();
         assertThat(assertions.function("map_topk", "map(array[varchar 'a',varchar 'b',varchar 'c',varchar 'd'], array[double '1.0', double '4.0', double '3.0', double '2.0'])", "0"))
                 .hasType(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE))

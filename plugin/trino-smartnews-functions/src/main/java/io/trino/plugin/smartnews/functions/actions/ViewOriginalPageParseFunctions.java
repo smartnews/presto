@@ -78,8 +78,30 @@ public class ViewOriginalPageParseFunctions
     public Block parse(@SqlType(StandardTypes.VARCHAR) Slice json)
             throws Exception
     {
-        ViewOriginalPageAction record = (ViewOriginalPageAction) parser.parseEssential(json.toStringUtf8());
+        return parseImpl(json, false);
+    }
 
+    @Description("parse action viewOriginalPage")
+    @ScalarFunction("parse_view_original_page_null_on_bad_input")
+    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), " +
+            "link_id bigint, url varchar, channel varchar, placement varchar, read_time_web double, read_time_smart double, view_ratio_web double, view_ratio_smart double, block varchar, req_id varchar, tracking_token map(varchar, varchar))")
+    @SqlNullable
+    public Block parseNullOnBadInput(@SqlType(StandardTypes.VARCHAR) Slice json)
+            throws Exception
+    {
+        return parseImpl(json, true);
+    }
+
+    public Block parseImpl(Slice json, boolean skipBadInput)
+            throws Exception
+    {
+        ViewOriginalPageAction record = (ViewOriginalPageAction) parser.parseEssential(json.toStringUtf8());
+        if (record == null) {
+            if (skipBadInput) {
+                return null;
+            }
+            throw new RuntimeException("Failed to parse essential: " + json.toStringUtf8());
+        }
         if (pageBuilder.isFull()) {
             pageBuilder.reset();
         }

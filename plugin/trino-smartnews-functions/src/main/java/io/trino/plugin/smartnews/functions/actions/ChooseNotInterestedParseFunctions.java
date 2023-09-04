@@ -73,8 +73,30 @@ public class ChooseNotInterestedParseFunctions
     public Block parse(@SqlType(StandardTypes.VARCHAR) Slice json)
             throws Exception
     {
-        ChooseNotInterestedAction record = (ChooseNotInterestedAction) parser.parseEssential(json.toStringUtf8());
+        return parseImpl(json, false);
+    }
 
+    @Description("parse action chooseNotInterested")
+    @ScalarFunction("parse_choose_not_interested_null_on_bad_input")
+    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), " +
+            "link_id bigint, publisher_name varchar, url varchar, link_block_indices array(integer), city varchar, region varchar, country_iso_code varchar, lat double, lon double)")
+    @SqlNullable
+    public Block parseNullOnBadInput(@SqlType(StandardTypes.VARCHAR) Slice json)
+            throws Exception
+    {
+        return parseImpl(json, true);
+    }
+
+    public Block parseImpl(Slice json, boolean skipBadInput)
+            throws Exception
+    {
+        ChooseNotInterestedAction record = (ChooseNotInterestedAction) parser.parseEssential(json.toStringUtf8());
+        if (record == null) {
+            if (skipBadInput) {
+                return null;
+            }
+            throw new RuntimeException("Failed to parse essential: " + json.toStringUtf8());
+        }
         if (pageBuilder.isFull()) {
             pageBuilder.reset();
         }

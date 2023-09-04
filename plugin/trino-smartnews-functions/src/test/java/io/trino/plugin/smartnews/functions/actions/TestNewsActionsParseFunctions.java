@@ -766,6 +766,114 @@ public class TestNewsActionsParseFunctions
     }
 
     @org.testng.annotations.Test
+    public void testInvalidInput()
+    {
+        assertions.query(String.format("SELECT m is null FROM (select parse_choose_not_interested_null_on_bad_input('%s')) t(m)", "invalid json"))
+                .assertThat()
+                .containsAll("select true");
+
+        try {
+            assertions.query(String.format("SELECT m is null FROM (select parse_choose_not_interested('%s')) t(m)", "invalid json"))
+                    .assertThat()
+                    .containsAll("select true");
+        }
+        catch (Exception e) {
+            org.testng.Assert.assertTrue(e.getMessage().contains("Failed to parse essential: invalid json"));
+        }
+
+        assertions.query(String.format("SELECT m is null FROM (select parse_feed_survey_thumb_click_null_on_bad_input('%s')) t(m)", "invalid json"))
+                .assertThat()
+                .containsAll("select true");
+
+        try {
+            assertions.query(String.format("SELECT m is null FROM (select parse_feed_survey_thumb_click('%s')) t(m)", "invalid json"))
+                    .assertThat()
+                    .containsAll("select true");
+        }
+        catch (Exception e) {
+            org.testng.Assert.assertTrue(e.getMessage().contains("Failed to parse essential: invalid json"));
+        }
+
+        assertions.query(String.format("SELECT m is null FROM (select parse_post_null_on_bad_input('%s')) t(m)", "invalid json"))
+                .assertThat()
+                .containsAll("select true");
+
+        try {
+            assertions.query(String.format("SELECT m is null FROM (select parse_post('%s')) t(m)", "invalid json"))
+                    .assertThat()
+                    .containsAll("select true");
+        }
+        catch (Exception e) {
+            org.testng.Assert.assertTrue(e.getMessage().contains("Failed to parse essential: invalid json"));
+        }
+
+        assertions.query(String.format("SELECT m is null FROM (select parse_report_impressions_null_on_bad_input('%s')) t(m)", "invalid json"))
+                .assertThat()
+                .containsAll("select true");
+
+        try {
+            assertions.query(String.format("SELECT m is null FROM (select parse_report_impressions('%s')) t(m)", "invalid json"))
+                    .assertThat()
+                    .containsAll("select true");
+        }
+        catch (Exception e) {
+            org.testng.Assert.assertTrue(e.getMessage().contains("Failed to parse essential: invalid json"));
+        }
+
+        assertions.query(String.format("SELECT m is null FROM (select parse_report_null_on_bad_input('%s')) t(m)", "invalid json"))
+                .assertThat()
+                .containsAll("select true");
+
+        try {
+            assertions.query(String.format("SELECT m is null FROM (select parse_report('%s')) t(m)", "invalid json"))
+                    .assertThat()
+                    .containsAll("select true");
+        }
+        catch (Exception e) {
+            org.testng.Assert.assertTrue(e.getMessage().contains("Failed to parse essential: invalid json"));
+        }
+
+        assertions.query(String.format("SELECT m is null FROM (select parse_view_channel_null_on_bad_input('%s')) t(m)", "invalid json"))
+                .assertThat()
+                .containsAll("select true");
+
+        try {
+            assertions.query(String.format("SELECT m is null FROM (select parse_view_channel('%s')) t(m)", "invalid json"))
+                    .assertThat()
+                    .containsAll("select true");
+        }
+        catch (Exception e) {
+            org.testng.Assert.assertTrue(e.getMessage().contains("Failed to parse essential: invalid json"));
+        }
+
+        assertions.query(String.format("SELECT m is null FROM (select parse_open_article_null_on_bad_input('%s')) t(m)", "invalid json"))
+                .assertThat()
+                .containsAll("select true");
+
+        try {
+            assertions.query(String.format("SELECT m is null FROM (select parse_open_article('%s')) t(m)", "invalid json"))
+                    .assertThat()
+                    .containsAll("select true");
+        }
+        catch (Exception e) {
+            org.testng.Assert.assertTrue(e.getMessage().contains("Failed to parse essential: invalid json"));
+        }
+
+        assertions.query(String.format("SELECT m is null FROM (select parse_view_original_page_null_on_bad_input('%s')) t(m)", "invalid json"))
+                .assertThat()
+                .containsAll("select true");
+
+        try {
+            assertions.query(String.format("SELECT m is null FROM (select parse_view_original_page('%s')) t(m)", "invalid json"))
+                    .assertThat()
+                    .containsAll("select true");
+        }
+        catch (Exception e) {
+            org.testng.Assert.assertTrue(e.getMessage().contains("Failed to parse essential: invalid json"));
+        }
+    }
+
+    @org.testng.annotations.Test
     public void printType()
     {
         String rowTypeString = ChooseNotInterestedParseFunctions.actionSpecificTypes.stream()

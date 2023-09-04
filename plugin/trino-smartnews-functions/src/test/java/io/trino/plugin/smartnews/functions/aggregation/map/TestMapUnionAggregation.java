@@ -73,6 +73,12 @@ public class TestMapUnionAggregation
                 .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
                 .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[double '4.4', double '2.2', double '4.4'])");
 
+        // NaN
+        assertions.query("SELECT map_union_sum(m) FROM (VALUES map(array[varchar 'a', varchar 'b'], array[double '1.1', double '2.2']), map(array[varchar 'a', varchar 'c'], array[cast(NaN() as double), double '4.4']), null) t(m)")
+                .assertThat()
+                .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
+                .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[cast(NaN() as double), double '2.2', double '4.4'])");
+
         // real value
         assertions.query("SELECT map_union_sum(m) FROM (VALUES map(array[varchar 'a', varchar 'b'], array[real '1.1', real '2.2']), map(array[varchar 'a', varchar 'c'], array[real '3.3', real '4.4']), null) t(m)")
                 .assertThat()
@@ -117,6 +123,12 @@ public class TestMapUnionAggregation
                 .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
                 .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[double '3.3', double '2.2', double '4.4'])");
 
+        // NaN
+        assertions.query("SELECT map_union_max(m) FROM (VALUES map(array[varchar 'a', varchar 'b'], array[double '1.1', double '2.2']), map(array[varchar 'a', varchar 'c'], array[cast(NaN() as double), double '4.4']), null) t(m)")
+                .assertThat()
+                .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
+                .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[double '1.1', double '2.2', double '4.4'])");
+
         // real value
         assertions.query("SELECT map_union_max(m) FROM (VALUES map(array[varchar 'a', varchar 'b'], array[real '1.1', real '2.2']), map(array[varchar 'a', varchar 'c'], array[real '3.3', real '4.4']), null) t(m)")
                 .assertThat()
@@ -160,6 +172,12 @@ public class TestMapUnionAggregation
                 .assertThat()
                 .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
                 .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[double '1.1', double '2.2', double '4.4'])");
+
+        // NaN
+        assertions.query("SELECT map_union_min(m) FROM (VALUES map(array[varchar 'a', varchar 'b'], array[double '1.1', double '2.2']), map(array[varchar 'a', varchar 'c'], array[cast(NaN() as double), double '4.4']), null) t(m)")
+                .assertThat()
+                .hasOutputTypes(List.of(mapType(VarcharType.VARCHAR, DoubleType.DOUBLE)))
+                .containsAll("select map(array[varchar 'a', varchar 'b', varchar 'c'], array[cast(NaN() as double), double '2.2', double '4.4'])");
 
         // real value
         assertions.query("SELECT map_union_min(m) FROM (VALUES map(array[varchar 'a', varchar 'b'], array[real '1.1', real '2.2']), map(array[varchar 'a', varchar 'c'], array[real '3.3', real '4.4']), null) t(m)")
