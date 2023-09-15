@@ -14,6 +14,7 @@
 package io.trino.plugin.smartnews.functions;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.smartnews.dmp.core.util.hash.SimHash;
 import io.airlift.slice.Slice;
@@ -21,6 +22,7 @@ import io.airlift.slice.Slices;
 import io.trino.spi.block.Block;
 import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.function.Description;
+import io.trino.spi.function.LiteralParameters;
 import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlType;
 import io.trino.spi.type.DoubleType;
@@ -51,26 +53,72 @@ public final class HashFunctions
 
     @Description("Dynamic consistent hash")
     @ScalarFunction("sn_hash")
+    @LiteralParameters("x")
     @SqlType(StandardTypes.VARCHAR)
-    public static Slice hashStr(ConnectorSession session, @SqlType(StandardTypes.VARCHAR) Slice slice) throws SQLException
+    public static Slice hashChars(ConnectorSession session, @SqlType("char(x)") Slice slice) throws SQLException
     {
-        return genSnHashSlice(slice.toStringUtf8() + session.getQueryId());
+        String hashed = SN_HASH_PREFIX + generateSnHashCode(session, slice.toStringUtf8()).toString();
+        return Slices.utf8Slice(hashed.substring(0, SN_HASH_LENGTH));
     }
 
     @Description("Dynamic consistent hash")
     @ScalarFunction("sn_hash")
     @SqlType(StandardTypes.VARCHAR)
-    public static Slice hashInt(ConnectorSession session, @SqlType(StandardTypes.INTEGER) long argument) throws SQLException
+    public static Slice hashVarchar(ConnectorSession session, @SqlType("varchar") Slice slice) throws SQLException
     {
-        return genSnHashSlice(Long.toHexString(argument) + session.getQueryId());
+        String hashed = SN_HASH_PREFIX + generateSnHashCode(session, slice.toStringUtf8()).toString();
+        return Slices.utf8Slice(hashed.substring(0, SN_HASH_LENGTH));
     }
 
     @Description("Dynamic consistent hash")
     @ScalarFunction("sn_hash")
-    @SqlType(StandardTypes.VARCHAR)
-    public static Slice hashInt(ConnectorSession session, @SqlType(StandardTypes.DOUBLE) double argument) throws SQLException
+    @SqlType(StandardTypes.INTEGER)
+    public static long hashInt(ConnectorSession session, @SqlType(StandardTypes.INTEGER) long argument) throws SQLException
     {
-        return genSnHashSlice(Double.toHexString(argument) + session.getQueryId());
+        long res = generateSnHashCode(session, argument).asInt();
+        return res > 0 ? -res : res;
+    }
+
+    @Description("Dynamic consistent hash")
+    @ScalarFunction("sn_hash")
+    @SqlType(StandardTypes.INTEGER)
+    public static long hashBigint(ConnectorSession session, @SqlType(StandardTypes.BIGINT) long argument) throws SQLException
+    {
+        long res = generateSnHashCode(session, argument).asInt();
+        return res > 0 ? -res : res;
+    }
+
+    @Description("Dynamic consistent hash")
+    @ScalarFunction("sn_hash")
+    @SqlType(StandardTypes.DOUBLE)
+    public static double hashDouble(ConnectorSession session, @SqlType(StandardTypes.DOUBLE) double argument) throws SQLException
+    {
+        long res = generateSnHashCode(session, Double.doubleToRawLongBits(argument)).asInt();
+        return res > 0 ? -res : res;
+    }
+
+    private static HashCode generateSnHashCode(ConnectorSession session, long content)
+    {
+        if (SN_HASH_KEY == null || SN_HASH_KEY.length() == 0) {
+            throw new RuntimeException("Env SN_HASH_KEY not found.");
+        }
+        return Hashing.murmur3_128((int) session.getStart().toEpochMilli())
+                .newHasher()
+                .putUnencodedChars(SN_HASH_KEY)
+                .putLong(content)
+                .hash();
+    }
+
+    private static HashCode generateSnHashCode(ConnectorSession session, String content)
+    {
+        if (SN_HASH_KEY == null || SN_HASH_KEY.length() == 0) {
+            throw new RuntimeException("Env SN_HASH_KEY not found.");
+        }
+        return Hashing.murmur3_128((int) session.getStart().toEpochMilli())
+                .newHasher()
+                .putUnencodedChars(SN_HASH_KEY)
+                .putUnencodedChars(content)
+                .hash();
     }
 
     @Description("_FUNC_(fv) - Calculate SimHash on a Map<String, Double>")
@@ -106,14 +154,5 @@ public final class HashFunctions
     static void setSnHashKey(String key)
     {
         SN_HASH_KEY = key;
-    }
-
-    @SuppressWarnings("checkstyle:IllegalToken")
-    private static Slice genSnHashSlice(String input)
-    {
-        assert SN_HASH_KEY != null && SN_HASH_KEY.length() > 0 : "Env SN_HASH_KEY not found.";
-        String hashed = SN_HASH_PREFIX + Hashing.sha256().hashUnencodedChars(SN_HASH_KEY + input).toString();
-        String trimmed = hashed.substring(0, SN_HASH_LENGTH);
-        return Slices.utf8Slice(trimmed);
     }
 }
