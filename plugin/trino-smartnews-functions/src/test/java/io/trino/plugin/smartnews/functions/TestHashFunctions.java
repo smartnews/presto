@@ -15,15 +15,16 @@ package io.trino.plugin.smartnews.functions;
 
 import io.trino.Session;
 import io.trino.testing.LocalQueryRunner;
-import io.trino.testing.TestingSession;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static io.trino.testing.TestingSession.testSessionBuilder;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotSame;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestHashFunctions
 {
@@ -47,33 +48,101 @@ public class TestHashFunctions
     }
 
     @Test
+    public void testHashNull() throws Exception
+    {
+        assertNull(runner.execute("select sn_hash(cast(NULL as varchar))").getOnlyValue());
+        assertNull(runner.execute("select sn_hash(cast(NULL as int))").getOnlyValue());
+        assertNull(runner.execute("select sn_hash(cast(NULL as double))").getOnlyValue());
+        assertNull(runner.execute("select sn_hash(a) from (values (1), (NULL)) as t(a)").getMaterializedRows().get(1).getField(0));
+        assertNull(runner.execute("select sn_hash(a) from (values (1.0), (NULL)) as t(a)").getMaterializedRows().get(1).getField(0));
+        assertNull(runner.execute("select sn_hash(a) from (values ('abc'), (NULL)) as t(a)").getMaterializedRows().get(1).getField(0));
+    }
+
+    @DataProvider(name = "testHashVariantTypesProvider")
+    public Object[][] testHashVariantTypesProvider()
+    {
+        return new Object[][] {
+            {"1", "integer"},
+            {"CAST(1 AS BIGINT)", "integer"},
+            {"CAST(1 AS DOUBLE)", "double"},
+            {"CAST(1 AS REAL)", "double"},
+            {"'aa'", "varchar"},
+            {"CAST('aa' AS VARCHAR(1))", "varchar"},
+            {"CAST('aa' AS CHAR)", "varchar"},
+            {"CAST('aa' AS CHAR(10))", "varchar"}
+        };
+    }
+
+    @Test(dataProvider = "testHashVariantTypesProvider")
+    public void testHashVariantTypes(String val, String type) throws Exception
+    {
+        // System.out.println(String.format("sn_hash(%s) = %s", val, runner.execute(String.format("select sn_hash(%s)", val)).getOnlyValue()));
+        String realType = runner.execute(String.format("select typeof(sn_hash(%s))", val)).getOnlyValue().toString();
+        assertEquals(realType, type, String.format("Type check failed for sn_hash(%s)", val, type, realType));
+    }
+
+    @Test
     public void testHashConsistency() throws Exception
     {
-        Session session = TestingSession.testSessionBuilder().build();
-        assertNull(runner.execute("select sn_hash(NULL)").getOnlyValue());
+        Session session = testSessionBuilder().build();
         assertEquals(runner.execute(session, "select sn_hash('123')").getOnlyValue(), runner.execute(session, "select sn_hash('123')").getOnlyValue());
-        assertEquals(runner.execute(session, "select sn_hash('測試')").getOnlyValue(), runner.execute(session, "select sn_hash('測試')").getOnlyValue());
         assertEquals(runner.execute(session, "select sn_hash(123)").getOnlyValue(), runner.execute(session, "select sn_hash(123)").getOnlyValue());
         assertEquals(runner.execute(session, "select sn_hash(0.123)").getOnlyValue(), runner.execute(session, "select sn_hash(0.123)").getOnlyValue());
         assertEquals(runner.execute(session, "select sn_hash('abc')").getOnlyValue(), runner.execute(session, "select sn_hash('abc')").getOnlyValue());
-        assertNotSame(runner.execute(session, "select sn_hash('123')").getOnlyValue(), runner.execute(session, "select sn_hash(123)").getOnlyValue());
-        assertNotSame(runner.execute(session, "select sn_hash('123')").getOnlyValue(), "123");
-        assertNotSame(runner.execute(session, "select sn_hash('')").getOnlyValue(), runner.execute(session, "select sn_hash(' ')").getOnlyValue());
+        assertNotEquals(runner.execute(session, "select sn_hash('123')").getOnlyValue(), runner.execute(session, "select sn_hash(123)").getOnlyValue());
+        assertNotEquals(runner.execute(session, "select sn_hash('123')").getOnlyValue(), "123");
+        assertNotEquals(runner.execute(session, "select sn_hash('')").getOnlyValue(), runner.execute(session, "select sn_hash(' ')").getOnlyValue());
+        assertNotEquals(runner.execute(session, "select sn_hash('aa')").getOnlyValue(), runner.execute(session, "select sn_hash(' aa')").getOnlyValue());
+        assertNotEquals(runner.execute(session, "select sn_hash('aa')").getOnlyValue(), runner.execute(session, "select sn_hash('aa ')").getOnlyValue());
+    }
+
+    @DataProvider(name = "testHashStringsProvider")
+    public Object[][] testHashStringsProvider()
+    {
+        return new Object[][] {
+            {"'123'", "'123'"},
+            {"cast('123' as char(3))", "'123'"},
+            {"cast('1234' as char(3))", "'123'"},
+            {"cast('1234' as varchar(3))", "'123'"},
+            {"cast('  ' as varchar(1))", "' '"},
+            {"cast(' ' as varchar(1))", "' '"},
+            {"cast('.' as char(1))", "'.'"},
+            {"cast('.' as char)", "'.'"},
+            {"cast('..' as char(2))", "cast('...' as char(2))"},
+        };
+    }
+
+    @Test(dataProvider = "testHashStringsProvider")
+    public void testHashStrings(String val1, String val2) throws Exception
+    {
+        assertEquals(
+                runner.execute(String.format("select sn_hash(%s)", val1)).getOnlyValue(),
+                runner.execute(String.format("select sn_hash(%s)", val2)).getOnlyValue());
     }
 
     @Test
     public void testDynamicHashing() throws Exception
     {
-        Session session = TestingSession.testSessionBuilder().build();
-        String prevRes = runner.execute(session, "select sn_hash('123')").getOnlyValue().toString();
-        assertNotSame(runner.execute(session, "select sn_hash('123')").getOnlyValue(), prevRes);
+        assertNotEquals(
+                runner.execute(testSessionBuilder().build(), "select sn_hash('123')"),
+                runner.execute(testSessionBuilder().build(), "select sn_hash('123')"));
+        assertNotEquals(
+                runner.execute(testSessionBuilder().build(), "select sn_hash(123)"),
+                runner.execute(testSessionBuilder().build(), "select sn_hash(123)"));
+        assertNotEquals(
+                runner.execute(testSessionBuilder().build(), "select sn_hash(0.123)"),
+                runner.execute(testSessionBuilder().build(), "select sn_hash(0.123)"));
     }
 
     @Test
     public void testHashingUTF8() throws Exception
     {
-        String prevRes = runner.execute("select sn_hash('測試')").getOnlyValue().toString();
-        assertNotSame(runner.execute("select sn_hash('測試')").getOnlyValue(), prevRes);
+        assertEquals(
+                runner.execute("select sn_hash('測試')").getOnlyValue(),
+                runner.execute("select sn_hash('測試')").getOnlyValue());
+        assertNotEquals(
+                runner.execute(testSessionBuilder().build(), "select sn_hash('測試')").getOnlyValue(),
+                runner.execute(testSessionBuilder().build(), "select sn_hash('測試')").getOnlyValue());
     }
 
     @Test
@@ -81,8 +150,25 @@ public class TestHashFunctions
     {
         assertEquals(runner.execute("select sn_hash('測試')").getOnlyValue().toString().substring(0, 2), HashFunctions.SN_HASH_PREFIX);
         assertEquals(runner.execute("select sn_hash('測試')").getOnlyValue().toString().length(), HashFunctions.SN_HASH_LENGTH);
-        String prevRes = runner.execute("select sn_hash('123')").getOnlyValue().toString();
-        assertNotSame(runner.execute("select sn_hash('123')").getOnlyValue(), prevRes);
+    }
+
+    @Test
+    public void testHashingNumericalShouldBeNonNegative() throws Exception
+    {
+        assertTrue((int) runner.execute("select sn_hash(1)").getOnlyValue() <= 0);
+        assertTrue((int) runner.execute("select sn_hash(12)").getOnlyValue() <= 0);
+        assertTrue((int) runner.execute("select sn_hash(123)").getOnlyValue() <= 0);
+        assertTrue((int) runner.execute("select sn_hash(2147483647)").getOnlyValue() <= 0);
+        assertTrue((int) runner.execute("select sn_hash(-1)").getOnlyValue() <= 0);
+        assertTrue((int) runner.execute("select sn_hash(-12)").getOnlyValue() <= 0);
+        assertTrue((int) runner.execute("select sn_hash(-123)").getOnlyValue() <= 0);
+        assertTrue((int) runner.execute("select sn_hash(-2147483648)").getOnlyValue() <= 0);
+        assertTrue((double) runner.execute("select sn_hash(123.0)").getOnlyValue() <= 0);
+        assertTrue((double) runner.execute("select sn_hash(12.3)").getOnlyValue() <= 0);
+        assertTrue((double) runner.execute("select sn_hash(1.23)").getOnlyValue() <= 0);
+        assertTrue((double) runner.execute("select sn_hash(-123.0)").getOnlyValue() <= 0);
+        assertTrue((double) runner.execute("select sn_hash(-12.3)").getOnlyValue() <= 0);
+        assertTrue((double) runner.execute("select sn_hash(-1.23)").getOnlyValue() <= 0);
     }
 
     @Test
