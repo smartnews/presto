@@ -24,14 +24,17 @@ import com.smartnews.feature.transforming.FeatureTransformer;
 import com.smartnews.feature.transforming.FeatureTransformerImpl;
 import com.smartnews.feature.transforming.config.FeatureTransformerConfig;
 import com.smartnews.feature.transforming.config.FeatureTransformerConfigFactory;
+import com.smartnews.feature.transforming.exception.FeatureTransformationException;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.function.Description;
 import io.trino.spi.function.ScalarFunction;
+import io.trino.spi.function.SqlNullable;
 import io.trino.spi.function.SqlType;
 import io.trino.spi.type.StandardTypes;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -59,9 +62,9 @@ public class FeatureTransformFunction
     @Description("runs feature transformation with the specified config file, which should be in S3 URI format")
     @ScalarFunction(value = "feature_transform", deterministic = false)
     @SqlType(StandardTypes.VARCHAR)
-    public static Slice transform(@SqlType(StandardTypes.VARCHAR) Slice userFeature,
-                                  @SqlType(StandardTypes.VARCHAR) Slice itemFeature,
-                                  @SqlType(StandardTypes.VARCHAR) Slice contextFeature,
+    public static Slice transform(@SqlNullable @SqlType(StandardTypes.VARCHAR) Slice userFeature,
+                                  @SqlNullable @SqlType(StandardTypes.VARCHAR) Slice itemFeature,
+                                  @SqlNullable @SqlType(StandardTypes.VARCHAR) Slice contextFeature,
                                   @SqlType(StandardTypes.VARCHAR) Slice configUri) throws SQLException
     {
         FeatureTransformer transformer = cache.get(configUri);
@@ -104,8 +107,11 @@ public class FeatureTransformFunction
             Map<String, Object> result = transformer.transform(userFeatureMap, itemFeatureMap, contextFeatureMap);
             return Slices.utf8Slice(objectMapper.writeValueAsString(result));
         }
-        catch (Exception e) {
+        catch (IOException e) {
             throw new SQLException(e);
+        }
+        catch (FeatureTransformationException ftfe) {
+            throw new SQLException(ftfe);
         }
     }
 }

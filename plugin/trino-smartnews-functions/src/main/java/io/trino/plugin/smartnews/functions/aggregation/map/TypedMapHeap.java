@@ -136,21 +136,21 @@ public class TypedMapHeap
         out.closeEntry();
     }
 
-    public static TypedMapHeap deserialize(boolean min, MethodHandle keyEqual, MethodHandle valueCompare, Type keyType, Type valueType, Block rowBlock)
+    public static TypedMapHeap deserialize(boolean min, MethodHandle keyEqual, MethodHandle valueCompare, Type keyType, ArrayType keyArrayType, Type valueType, ArrayType valueArrayType, Block rowBlock)
     {
         int capacity = toIntExact(BIGINT.getLong(rowBlock, 0));
         int[] keyIndex = new int[capacity];
         int[] heapIndex = new int[capacity];
 
         BlockBuilder keyBlockBuilder = keyType.createBlockBuilder(null, capacity);
-        Block keyBlock = new ArrayType(keyType).getObject(rowBlock, 1);
+        Block keyBlock = keyArrayType.getObject(rowBlock, 1);
         for (int position = 0; position < keyBlock.getPositionCount(); position++) {
             keyIndex[position] = position;
             keyType.appendTo(keyBlock, position, keyBlockBuilder);
         }
 
         BlockBuilder valueBlockBuilder = valueType.createBlockBuilder(null, capacity);
-        Block valueBlock = new ArrayType(valueType).getObject(rowBlock, 2);
+        Block valueBlock = valueArrayType.getObject(rowBlock, 2);
         for (int position = 0; position < valueBlock.getPositionCount(); position++) {
             heapIndex[position] = position;
             if (valueBlock.isNull(position)) {
@@ -171,33 +171,55 @@ public class TypedMapHeap
             if (valueGreaterThanOrEqual(valueBlockBuilder, heapIndex[0], valueBlock, position)) {
                 return; // and new element is not larger than heap top: do not add
             }
-            keyIndex[0] = keyBlockBuilder.getPositionCount();
-            heapIndex[0] = valueBlockBuilder.getPositionCount();
-            keyType.appendTo(keyBlock, position, keyBlockBuilder);
-            valueType.appendTo(valueBlock, position, valueBlockBuilder);
-            siftDown();
+            int keyCurrentIdx = getKeyIndex(keyBlock, position);
+            if (keyCurrentIdx == -1) {
+                addToTop(keyBlock, valueBlock, position);
+            }
+            else {
+                // key already exist
+                updateValueInTheMiddle(valueBlock, position, keyCurrentIdx);
+            }
         }
         else {
             int keyCurrentIdx = getKeyIndex(keyBlock, position);
             if (keyCurrentIdx == -1) {
-                keyIndex[positionCount] = keyBlockBuilder.getPositionCount();
-                heapIndex[positionCount] = valueBlockBuilder.getPositionCount();
-                positionCount++;
-                keyType.appendTo(keyBlock, position, keyBlockBuilder);
-                valueType.appendTo(valueBlock, position, valueBlockBuilder);
-                siftUp();
+                appendToEnd(keyBlock, valueBlock, position);
             }
             else {
                 // the key already exist, update the value is necessary
                 if (valueGreaterThanOrEqual(valueBlockBuilder, heapIndex[keyCurrentIdx], valueBlock, position)) {
                     return; // and new element is not larger than heap top: do not update
                 }
-                valueType.appendTo(valueBlock, position, valueBlockBuilder);
-                heapIndex[keyCurrentIdx] = valueBlockBuilder.getPositionCount() - 1;
-                siftUp();
+                updateValueInTheMiddle(valueBlock, position, keyCurrentIdx);
             }
         }
         compactIfNecessary();
+    }
+
+    private void updateValueInTheMiddle(Block valueBlock, int position, int keyCurrentIdx)
+    {
+        valueType.appendTo(valueBlock, position, valueBlockBuilder);
+        heapIndex[keyCurrentIdx] = valueBlockBuilder.getPositionCount() - 1;
+        shiftUpAndDown(keyCurrentIdx);
+    }
+
+    private void addToTop(Block keyBlock, Block valueBlock, int position)
+    {
+        keyIndex[0] = keyBlockBuilder.getPositionCount();
+        heapIndex[0] = valueBlockBuilder.getPositionCount();
+        keyType.appendTo(keyBlock, position, keyBlockBuilder);
+        valueType.appendTo(valueBlock, position, valueBlockBuilder);
+        shiftDown(0);
+    }
+
+    private void appendToEnd(Block keyBlock, Block valueBlock, int position)
+    {
+        keyIndex[positionCount] = keyBlockBuilder.getPositionCount();
+        heapIndex[positionCount] = valueBlockBuilder.getPositionCount();
+        positionCount++;
+        keyType.appendTo(keyBlock, position, keyBlockBuilder);
+        valueType.appendTo(valueBlock, position, valueBlockBuilder);
+        shiftUp(positionCount - 1);
     }
 
     // return the index from keyIndex, if key already exists, return -1 if key does not exist
@@ -223,9 +245,9 @@ public class TypedMapHeap
         }
     }
 
-    private void siftDown()
+    private int shiftDown(int startPos)
     {
-        int position = 0;
+        int position = startPos;
         while (true) {
             int leftPosition = position * 2 + 1;
             if (leftPosition >= positionCount) {
@@ -246,11 +268,12 @@ public class TypedMapHeap
             swap(heapIndex, position, smallerChildPosition);
             position = smallerChildPosition;
         }
+        return position;
     }
 
-    private void siftUp()
+    private int shiftUp(int startPos)
     {
-        int position = positionCount - 1;
+        int position = startPos;
         while (position != 0) {
             int parentPosition = (position - 1) / 2;
             if (valueGreaterThanOrEqual(valueBlockBuilder, heapIndex[position], valueBlockBuilder, heapIndex[parentPosition])) {
@@ -260,6 +283,17 @@ public class TypedMapHeap
             swap(heapIndex, position, parentPosition);
             position = parentPosition;
         }
+        return position;
+    }
+
+    private int shiftUpAndDown(int pos)
+    {
+        int newpos = shiftUp(pos);
+        if (newpos == pos) {
+            // did not shift up: try shifting down
+            return shiftDown(pos);
+        }
+        return newpos;
     }
 
     static void swap(int[] arr, int i, int j)
@@ -274,7 +308,9 @@ public class TypedMapHeap
         // Byte size check is needed. Otherwise, if size * 3 is small, BlockBuilder can be reallocated too often.
         // Position count is needed. Otherwise, for large elements, heap will be compacted every time.
         // Size instead of retained size is needed because default allocation size can be huge for some block builders. And the first check will become useless in such case.
-        if (keyBlockBuilder.getSizeInBytes() < COMPACT_THRESHOLD_BYTES || keyBlockBuilder.getPositionCount() / positionCount < COMPACT_THRESHOLD_RATIO) {
+        if (keyBlockBuilder.getSizeInBytes() < COMPACT_THRESHOLD_BYTES ||
+                (keyBlockBuilder.getPositionCount() / positionCount < COMPACT_THRESHOLD_RATIO
+                && valueBlockBuilder.getPositionCount() / positionCount < COMPACT_THRESHOLD_RATIO)) {
             return;
         }
         BlockBuilder newHeapKeyBlockBuilder = keyType.createBlockBuilder(null, keyBlockBuilder.getPositionCount());

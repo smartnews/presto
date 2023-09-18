@@ -23,6 +23,7 @@ import io.trino.spi.function.Convention;
 import io.trino.spi.function.OperatorDependency;
 import io.trino.spi.function.OperatorType;
 import io.trino.spi.function.TypeParameter;
+import io.trino.spi.type.ArrayType;
 import io.trino.spi.type.Type;
 
 import java.lang.invoke.MethodHandle;
@@ -67,7 +68,10 @@ public class TypedMapMaxHeapStateFactory
                     n);
             return new TypedMapHeap(false, keyEqual, valueCompare, keyType, valueType, toIntExact(n));
         };
-        deserializer = rowBlock -> TypedMapHeap.deserialize(false, keyEqual, valueCompare, keyType, valueType, rowBlock);
+        // pre create the array types to avoid creating them for each state
+        ArrayType keyArrayType = new ArrayType(keyType);
+        ArrayType valueArrayType = new ArrayType(valueType);
+        deserializer = rowBlock -> TypedMapHeap.deserialize(false, keyEqual, valueCompare, keyType, keyArrayType, valueType, valueArrayType, rowBlock);
     }
 
     @Override
