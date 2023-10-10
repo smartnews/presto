@@ -48,6 +48,13 @@ public class TestHyperLogLogAggregation
     }
 
     @org.testng.annotations.Test
+    public void testPfmergeNull()
+    {
+        assertThat(assertions.query("SELECT pfmerge(k) FROM (VALUES (cast(null as varbinary))) t(k)"))
+                .matches("SELECT cast(null as varbinary)");
+    }
+
+    @org.testng.annotations.Test
     public void testPfaggrString()
     {
         assertThat(assertions.query("SELECT pfcount(cast(pfaggr(k) as varbinary)) FROM (VALUES ('1'), ('1'), ('2')) t(k)"))
