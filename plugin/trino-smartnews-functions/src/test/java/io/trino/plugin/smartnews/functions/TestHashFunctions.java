@@ -68,8 +68,8 @@ public class TestHashFunctions
             {"CAST(1 AS REAL)", "double"},
             {"'aa'", "varchar"},
             {"CAST('aa' AS VARCHAR(1))", "varchar"},
-            {"CAST('aa' AS CHAR)", "varchar"},
-            {"CAST('aa' AS CHAR(10))", "varchar"}
+            {"CAST('aa' AS CHAR)", "char(1)"},
+            {"CAST('aa' AS CHAR(10))", "char(10)"}
         };
     }
 
@@ -96,28 +96,43 @@ public class TestHashFunctions
         assertNotEquals(runner.execute(session, "select sn_hash('aa')").getOnlyValue(), runner.execute(session, "select sn_hash('aa ')").getOnlyValue());
     }
 
-    @DataProvider(name = "testHashStringsProvider")
-    public Object[][] testHashStringsProvider()
+    @DataProvider(name = "testHashVarcharsProvider")
+    public Object[][] testHashVarcharsProvider()
     {
         return new Object[][] {
             {"'123'", "'123'"},
-            {"cast('123' as char(3))", "'123'"},
-            {"cast('1234' as char(3))", "'123'"},
             {"cast('1234' as varchar(3))", "'123'"},
             {"cast('  ' as varchar(1))", "' '"},
             {"cast(' ' as varchar(1))", "' '"},
-            {"cast('.' as char(1))", "'.'"},
-            {"cast('.' as char)", "'.'"},
-            {"cast('..' as char(2))", "cast('...' as char(2))"},
         };
     }
 
-    @Test(dataProvider = "testHashStringsProvider")
-    public void testHashStrings(String val1, String val2) throws Exception
+    @Test(dataProvider = "testHashVarcharsProvider")
+    public void testHashVarchars(String val1, String val2) throws Exception
     {
         assertEquals(
                 runner.execute(String.format("select sn_hash(%s)", val1)).getOnlyValue(),
                 runner.execute(String.format("select sn_hash(%s)", val2)).getOnlyValue());
+    }
+
+    @DataProvider(name = "testHashCharsProvider")
+    public Object[][] testHashCharsProvider()
+    {
+        return new Object[][] {
+            {"cast('123' as char(3))", "'123'", 3},
+            {"cast('1234' as char(3))", "'123'", 3},
+            {"cast('.' as char(1))", "'.'", 1},
+            {"cast('.' as char)", "'.'", 1},
+            {"cast('..' as char(2))", "cast('...' as char(2))", 2},
+        };
+    }
+
+    @Test(dataProvider = "testHashCharsProvider")
+    public void testHashChars(String val1, String val2, int len) throws Exception
+    {
+        assertEquals(
+                runner.execute(String.format("select sn_hash(%s)", val1)).getOnlyValue(),
+                runner.execute(String.format("select cast(sn_hash(%s) as char(%d))", val2, len)).getOnlyValue());
     }
 
     @Test

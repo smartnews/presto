@@ -22,6 +22,7 @@ import io.airlift.slice.Slices;
 import io.trino.spi.block.Block;
 import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.function.Description;
+import io.trino.spi.function.LiteralParameter;
 import io.trino.spi.function.LiteralParameters;
 import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlType;
@@ -54,11 +55,12 @@ public final class HashFunctions
     @Description("Dynamic consistent hash")
     @ScalarFunction("sn_hash")
     @LiteralParameters("x")
-    @SqlType(StandardTypes.VARCHAR)
-    public static Slice hashChars(ConnectorSession session, @SqlType("char(x)") Slice slice) throws SQLException
+    @SqlType("char(x)")
+    public static Slice hashChars(@LiteralParameter("x") Long x, ConnectorSession session, @SqlType("char(x)") Slice slice) throws SQLException
     {
-        String hashed = SN_HASH_PREFIX + generateSnHashCode(session, slice.toStringUtf8()).toString();
-        return Slices.utf8Slice(hashed.substring(0, SN_HASH_LENGTH));
+        int xInt = x.intValue();
+        String hashed = generateSnHashCode(session, slice.toStringUtf8()).toString();
+        return Slices.utf8Slice((SN_HASH_PREFIX + hashed).substring(0, SN_HASH_LENGTH < xInt ? SN_HASH_LENGTH : xInt));
     }
 
     @Description("Dynamic consistent hash")
