@@ -79,6 +79,7 @@ public class FeatureTransformFunction
                     AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
                     S3Object s3Object = s3Client.getObject(s3URI.getBucket(), s3URI.getKey());
                     json = IOUtils.toString(s3Object.getObjectContent());
+                    s3Client.shutdown();
                 }
                 else if (configUriStr.startsWith("{")) {
                     // JSON string
