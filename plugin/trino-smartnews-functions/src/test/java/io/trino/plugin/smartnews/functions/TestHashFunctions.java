@@ -20,6 +20,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.Arrays;
+
 import static io.trino.testing.TestingSession.testSessionBuilder;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -63,7 +65,7 @@ public class TestHashFunctions
     {
         return new Object[][] {
             {"1", "integer"},
-            {"CAST(1 AS BIGINT)", "integer"},
+            {"CAST(1 AS BIGINT)", "bigint"},
             {"CAST(1 AS DOUBLE)", "double"},
             {"CAST(1 AS REAL)", "double"},
             {"'aa'", "varchar"},
@@ -135,6 +137,36 @@ public class TestHashFunctions
                 runner.execute(String.format("select cast(sn_hash(%s) as char(%d))", val2, len)).getOnlyValue());
     }
 
+    @DataProvider(name = "testHashArraysProvider")
+    public String[][][] testHashArraysProvider()
+    {
+        return new String[][][] {
+            {{"'1234567890123456789012345678901234567890'"}},
+            {{"'123'"}},
+            {{"123"}},
+            {{"cast(123.0 as double)"}},
+            {{"cast(123 as bigint)"}},
+            {{"'1234567890123456789012345678901234567890'", "'abcdefghijklmnopqrstuvwxyz'"}},
+            {{"'123'", "'abc'"}},
+            {{"'123'", "cast('456' as varchar(30))"}},
+            {{"cast('123' as char(3))", "cast('456' as char(3))"}},
+            {{"123", "456"}},
+            {{"123", "cast(NULL as int)"}},
+        };
+    }
+
+    @Test(dataProvider = "testHashArraysProvider")
+    public void testHashArrays(String[] vals) throws Exception
+    {
+        String hashArraySql = String.format("select sn_hash(ARRAY[%s])", String.join(", ", vals));
+        String arrayOfHashSql = String.format("select ARRAY[%s]",
+                String.join(", ", Arrays.stream(vals).map(x -> String.format("sn_hash(%s)", x)).toArray(String[]::new)));
+        assertEquals(
+                runner.execute(hashArraySql).getOnlyValue(),
+                runner.execute(arrayOfHashSql).getOnlyValue(),
+                String.format("Inconsistent return value for <%s> and <%s>", hashArraySql, arrayOfHashSql));
+    }
+
     @Test
     public void testDynamicHashing() throws Exception
     {
@@ -165,6 +197,8 @@ public class TestHashFunctions
     {
         assertEquals(runner.execute("select sn_hash('測試')").getOnlyValue().toString().substring(0, 2), HashFunctions.SN_HASH_PREFIX);
         assertEquals(runner.execute("select sn_hash('測試')").getOnlyValue().toString().length(), HashFunctions.SN_HASH_LENGTH);
+        assertEquals(runner.execute("select sn_hash('123456789012345678901234567890')").getOnlyValue().toString().substring(0, 2), HashFunctions.SN_HASH_PREFIX);
+        assertEquals(runner.execute("select sn_hash('123456789012345678901234567890')").getOnlyValue().toString().length(), HashFunctions.SN_HASH_LENGTH);
     }
 
     @Test

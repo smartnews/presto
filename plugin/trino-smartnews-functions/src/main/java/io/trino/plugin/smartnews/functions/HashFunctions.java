@@ -20,19 +20,26 @@ import com.smartnews.dmp.core.util.hash.SimHash;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.block.Block;
+import io.trino.spi.block.BlockBuilder;
 import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.function.Description;
 import io.trino.spi.function.LiteralParameter;
 import io.trino.spi.function.LiteralParameters;
 import io.trino.spi.function.ScalarFunction;
 import io.trino.spi.function.SqlType;
+import io.trino.spi.function.TypeParameter;
+import io.trino.spi.type.CharType;
 import io.trino.spi.type.DoubleType;
 import io.trino.spi.type.StandardTypes;
+import io.trino.spi.type.Type;
 
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.trino.spi.type.BigintType.BIGINT;
+import static io.trino.spi.type.DoubleType.DOUBLE;
+import static io.trino.spi.type.IntegerType.INTEGER;
 import static io.trino.spi.type.TypeUtils.readNativeValue;
 import static io.trino.spi.type.VarcharType.VARCHAR;
 
@@ -83,7 +90,7 @@ public final class HashFunctions
 
     @Description("Dynamic consistent hash")
     @ScalarFunction("sn_hash")
-    @SqlType(StandardTypes.INTEGER)
+    @SqlType(StandardTypes.BIGINT)
     public static long hashBigint(ConnectorSession session, @SqlType(StandardTypes.BIGINT) long argument) throws SQLException
     {
         long res = generateSnHashCode(session, argument).asInt();
@@ -97,6 +104,98 @@ public final class HashFunctions
     {
         long res = generateSnHashCode(session, Double.doubleToRawLongBits(argument)).asInt();
         return res > 0 ? -res : res;
+    }
+
+    @Description("Dynamic consistent hash")
+    @ScalarFunction("sn_hash")
+    @LiteralParameters("x")
+    @SqlType("array(char(x))")
+    public static Block hashCharArray(
+            @LiteralParameter("x") Long x,
+            ConnectorSession session,
+            @SqlType("array(char(x))") Block array) throws SQLException
+    {
+        if (array.getPositionCount() == 0) {
+            return array;
+        }
+
+        int positionCount = array.getPositionCount();
+        CharType type = CharType.createCharType(x);
+        BlockBuilder resultBuilder = type.createBlockBuilder(null, positionCount);
+        for (int position = 0; position < positionCount; position++) {
+            Object input = null;
+            if (array.isNull(position)) {
+                resultBuilder.appendNull();
+            }
+            else {
+                type.writeSlice(resultBuilder, hashChars(x, session, array.getSlice(position, 0, array.getSliceLength(position))));
+            }
+        }
+        return resultBuilder.build();
+    }
+
+    @Description("Dynamic consistent hash")
+    @ScalarFunction("sn_hash")
+    @LiteralParameters("x")
+    @SqlType("array(varchar)")
+    public static Block hashVarcharArray(
+            @LiteralParameter("x") Long x,
+            ConnectorSession session,
+            @SqlType("array(varchar(x))") Block array) throws SQLException
+    {
+        if (array.getPositionCount() == 0) {
+            return array;
+        }
+
+        int positionCount = array.getPositionCount();
+        BlockBuilder resultBuilder = VARCHAR.createBlockBuilder(null, positionCount);
+        for (int position = 0; position < positionCount; position++) {
+            Object input = null;
+            if (array.isNull(position)) {
+                resultBuilder.appendNull();
+            }
+            else {
+                VARCHAR.writeSlice(resultBuilder, hashVarchar(session, array.getSlice(position, 0, array.getSliceLength(position))));
+            }
+        }
+        return resultBuilder.build();
+    }
+
+    @Description("Dynamic consistent hash")
+    @ScalarFunction("sn_hash")
+    @TypeParameter("T")
+    @SqlType("array(T)")
+    public static Block hashValueArray(
+            @TypeParameter("T") Type type,
+            ConnectorSession session,
+            @SqlType("array(T)") Block array) throws SQLException
+    {
+        if (array.getPositionCount() == 0) {
+            return array;
+        }
+
+        int positionCount = array.getPositionCount();
+        BlockBuilder resultBuilder;
+        resultBuilder = type.createBlockBuilder(null, positionCount);
+        for (int position = 0; position < positionCount; position++) {
+            Object input = null;
+            if (array.isNull(position)) {
+                resultBuilder.appendNull();
+            }
+            else if (type == INTEGER) {
+                INTEGER.writeLong(resultBuilder, hashInt(session, array.getInt(position, 0)));
+            }
+            else if (type == BIGINT) {
+                BIGINT.writeLong(resultBuilder, hashBigint(session, array.getLong(position, 0)));
+            }
+            else if (type == DOUBLE) {
+                DOUBLE.writeDouble(resultBuilder, hashDouble(session, DOUBLE.getDouble(array, position)));
+            }
+            else {
+                throw new RuntimeException("Unhandled type: " + type);
+            }
+        }
+        return resultBuilder.build();
     }
 
     private static HashCode generateSnHashCode(ConnectorSession session, long content)
