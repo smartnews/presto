@@ -25,6 +25,14 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
+        <repository>
+            <id>smartnews</id>
+            <url>http://nexus.smartnews.be/nexus/content/repositories/smartnews</url>
+        </repository>
+        <repository>
+            <id>smartnews-snapshots</id>
+            <url>http://nexus.smartnews.be/nexus/content/repositories/snapshots</url>
+        </repository>
     </repositories>
 
     <dependencies>

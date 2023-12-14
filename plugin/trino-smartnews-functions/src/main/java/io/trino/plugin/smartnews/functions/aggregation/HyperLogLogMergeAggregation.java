@@ -84,6 +84,11 @@ public final class HyperLogLogMergeAggregation
     @OutputFunction(StandardTypes.VARBINARY)
     public static void output(SliceState state, BlockBuilder out)
     {
-        VarbinaryType.VARBINARY.writeSlice(out, state.getSlice());
+        if (state == null || state.getSlice() == null) {
+            out.appendNull();
+        }
+        else {
+            VarbinaryType.VARBINARY.writeSlice(out, state.getSlice());
+        }
     }
 }

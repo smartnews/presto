@@ -15,7 +15,21 @@ package io.trino.plugin.smartnews.functions;
 
 import com.google.common.collect.ImmutableSet;
 import io.trino.plugin.smartnews.event.QueryEventLoggerFactory;
+import io.trino.plugin.smartnews.functions.actions.ChooseNotInterestedParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.FeedSurveyThumbClickParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.PostParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ReportImpressionsParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ReportParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ViewChannelParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ViewOpenArticleParseFunctions;
+import io.trino.plugin.smartnews.functions.actions.ViewOriginalPageParseFunctions;
+import io.trino.plugin.smartnews.functions.aggregation.HyperLogLogAggregation;
 import io.trino.plugin.smartnews.functions.aggregation.HyperLogLogMergeAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapTopkAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionMaxAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionMinAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.map.MapUnionSumAggregation;
+import io.trino.plugin.smartnews.functions.aggregation.videoview.ViewedSegmentsOrAggregation;
 import io.trino.spi.Plugin;
 import io.trino.spi.eventlistener.EventListenerFactory;
 import io.trino.spi.type.TypeManager;
@@ -41,15 +55,35 @@ public class SmartnewsFunctionsPlugin
     public Set<Class<?>> getFunctions()
     {
         return ImmutableSet.<Class<?>>builder()
+                .add(HyperLogLogAggregation.class)
                 .add(HyperLogLogMergeAggregation.class)
                 .add(HyperLogLogFunctions.class)
                 .add(HttpFunctions.class)
                 .add(AwsFunctions.class)
                 .add(AssertFunctions.class)
                 .add(ExtendedFunctions.class)
-                .add(ExtendedMapFunctions.class)
                 .add(PseudonymisationFunctions.class)
                 .add(HashFunctions.class)
+                .add(ExtractHtmlTextFunction.class)
+                .add(FeatureTransformFunction.class)
+                .add(JsonFunctions.class)
+                .add(MapFunctions.class)
+                .add(HiveHashFunction.class)
+                .add(VideoFunctions.class)
+                .add(ViewedSegmentsOrAggregation.class)
+                .add(ReportImpressionsParseFunctions.class)
+                .add(ViewChannelParseFunctions.class)
+                .add(ViewOriginalPageParseFunctions.class)
+                .add(ViewOpenArticleParseFunctions.class)
+                .add(PostParseFunctions.class)
+                .add(ReportParseFunctions.class)
+                .add(ChooseNotInterestedParseFunctions.class)
+                .add(FeedSurveyThumbClickParseFunctions.class)
+                .add(StringFunctions.class)
+                .add(MapUnionSumAggregation.class)
+                .add(MapUnionMaxAggregation.class)
+                .add(MapUnionMinAggregation.class)
+                .add(MapTopkAggregation.class)
                 .build();
     }
 
