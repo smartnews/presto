@@ -69,7 +69,8 @@ public class Utils
             TypeAndName.of("account_id", VarcharType.VARCHAR),
             TypeAndName.of("user_creation_timestamp", BigintType.BIGINT),
             TypeAndName.of("ab_test", new ArrayType(new MapType(VARCHAR, IntegerType.INTEGER, new TypeOperators()))),
-            TypeAndName.of("ab_test_v3_variant_ids", new ArrayType(IntegerType.INTEGER)));
+            TypeAndName.of("ab_test_v3_variant_ids", new ArrayType(IntegerType.INTEGER)),
+            TypeAndName.of("app_id", VarcharType.VARCHAR));
 
     public static void writeActionBase(BlockBuilder builder, ActionBase base)
     {
@@ -115,6 +116,8 @@ public class Utils
         else {
             builder.appendNull();
         }
+
+        writeString(builder, base.getAppId());
     }
 
     public static void writeString(BlockBuilder builder, Object value)

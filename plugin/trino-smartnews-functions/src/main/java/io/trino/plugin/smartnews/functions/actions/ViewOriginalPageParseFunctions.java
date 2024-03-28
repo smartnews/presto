@@ -72,7 +72,7 @@ public class ViewOriginalPageParseFunctions
 
     @Description("parse action viewOriginalPage")
     @ScalarFunction("parse_view_original_page")
-    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), " +
+    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), app_id varchar, " +
             "link_id bigint, url varchar, channel varchar, placement varchar, read_time_web double, read_time_smart double, view_ratio_web double, view_ratio_smart double, block varchar, req_id varchar, tracking_token map(varchar, varchar))")
     @SqlNullable
     public Block parse(@SqlType(StandardTypes.VARCHAR) Slice json)
@@ -83,7 +83,7 @@ public class ViewOriginalPageParseFunctions
 
     @Description("parse action viewOriginalPage")
     @ScalarFunction("parse_view_original_page_null_on_bad_input")
-    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), " +
+    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), app_id varchar, " +
             "link_id bigint, url varchar, channel varchar, placement varchar, read_time_web double, read_time_smart double, view_ratio_web double, view_ratio_smart double, block varchar, req_id varchar, tracking_token map(varchar, varchar))")
     @SqlNullable
     public Block parseNullOnBadInput(@SqlType(StandardTypes.VARCHAR) Slice json)

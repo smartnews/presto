@@ -64,7 +64,7 @@ public class ReportParseFunctions
 
     @Description("parse action report")
     @ScalarFunction("parse_report")
-    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), " +
+    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), app_id varchar, " +
             "url varchar, link_id bigint, req_id varchar, tracking_token map(varchar, varchar))")
     @SqlNullable
     public Block parse(@SqlType(StandardTypes.VARCHAR) Slice json)
@@ -75,7 +75,7 @@ public class ReportParseFunctions
 
     @Description("parse action report")
     @ScalarFunction("parse_report_null_on_bad_input")
-    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), " +
+    @SqlType("row(device_token varchar, virtual_id varchar, edition varchar, platform varchar, session_id varchar, app_version varchar, system_version varchar, connection_type varchar, locale varchar, timezone varchar, hardware varchar, event_timestamp bigint, account_id varchar, user_creation_timestamp bigint, ab_test array(map(varchar, integer)), ab_test_v3_variant_ids array(integer), app_id varchar, " +
             "url varchar, link_id bigint, req_id varchar, tracking_token map(varchar, varchar))")
     @SqlNullable
     public Block parseNullOnBadInput(@SqlType(StandardTypes.VARCHAR) Slice json)
