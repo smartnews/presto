@@ -84,6 +84,7 @@ public class SmartnewsFunctionsPlugin
                 .add(MapUnionMaxAggregation.class)
                 .add(MapUnionMinAggregation.class)
                 .add(MapTopkAggregation.class)
+                .add(XxHash32Functions.class)
                 .build();
     }
 
